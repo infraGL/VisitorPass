@@ -271,31 +271,73 @@ function openSignIn(){
   inError.style.display="none";
   signIn.style.display="block";
 }
+
 function submitSignIn(){
-  const name=inName.value.trim(), hp=inHp.value.trim(),
-        company=inCompany.value.trim(), purpose=inPurpose.value.trim();
-  inError.style.display="none";
+  const name = inName.value.trim();
+  const hp = inHp.value.trim();
+  const company = inCompany.value.trim();
+  const purpose = inPurpose.value.trim();
+  inError.style.display = "none";
 
-  if(!name||!hp||!company||!purpose){
-    inError.textContent="❌ Please fill in all fields.";
-    inError.style.display="block"; return;
+  if(!name || !hp || !company || !purpose){
+    inError.textContent = "❌ Please fill in all fields.";
+    inError.style.display = "block";
+    return;
   }
+
   if(!isValidHp(hp)){
-    inError.textContent="❌ Handphone number must be exactly 8 digits.";
-    inError.style.display="block"; return;
+    inError.textContent = "❌ Handphone number must be exactly 8 digits.";
+    inError.style.display = "block";
+    return;
   }
 
-  const conflict=records.find(r=>!r.outTime&&(r.name.toLowerCase()===name.toLowerCase()||r.hp===hp));
+  const conflict = records.find(r =>
+    !r.outTime &&
+    (r.name.toLowerCase() === name.toLowerCase() || r.hp === hp)
+  );
+
   if(conflict){
-    showPopup("⚠️ Cannot Sign‑In",
+    showPopup(
+      "⚠️ Cannot Sign‑In",
       "User hasn’t Sign‑Out yet.<br>Please Sign‑Out first.",
-      "Go to Sign‑Out",openSignOut); return;
+      "Go to Sign‑Out",
+      openSignOut
+    );
+    return;
   }
 
-  records.push({ name,hp,company,purpose,inTime:new Date().toLocaleString(),outTime:"" });
-  localStorage.setItem("records",JSON.stringify(records));
+  // Local backup
+  records.push({
+    name,
+    hp,
+    company,
+    purpose,
+    inTime: new Date().toLocaleString(),
+    outTime: ""
+  });
+  localStorage.setItem("records", JSON.stringify(records));
 
-  showPopup("✅ Sign‑In Successful",`${name} signed in successfully.`,"Back to Main Page",backToMain);
+  // ✅ Power Automate Flow A
+  fetch("https://6adc8542497ee52f9948699f4ec423.8e.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/244ce5b70b2648dc8a28a6cc5170d121/triggers/manual/paths/invoke?api-version=1", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      date: new Date().toLocaleDateString(),
+      day: new Date().toLocaleDateString(undefined, { weekday: "long" }),
+      timeIn: new Date().toLocaleTimeString(),
+      name,
+      hp,
+      company,
+      purpose
+    })
+  }).catch(err => console.error("Flow A error:", err));
+
+  showPopup(
+    "✅ Sign‑In Successful",
+    `${name} signed in successfully.`,
+    "Back to Main Page",
+    backToMain
+  );
 }
 
 /* SIGN‑OUT */
@@ -339,11 +381,14 @@ function closePopup(){ popup.style.display="none"; }
 
 /* ABOUT / ADMIN */
 function showAboutPopup(){
-  showPopup("About VisitorPass",
+  showPopup(
+    "About VisitorPass",
     "This application was developed and a property of Gospel Light Christian Church. " +
     "It is intended for internal use only and not for external distribution or for sale.<br><br>" +
     "For any inquiries, please contact us at Hp 91784990 or email us at infra@gospellight.sg.",
-    "Close",closePopup);
+    "Close",
+    closePopup
+  );
 }
 function showAdminPopup(){
   showPopup("Admin Access","Admin functions will be enabled in a later version.","Close",closePopup);
@@ -351,4 +396,3 @@ function showAdminPopup(){
 </script>
 </body>
 </html>
-``
