@@ -7,7 +7,6 @@
 
 <style>
 *{box-sizing:border-box}
-
 body{
   font-family:system-ui,Arial,sans-serif;
   background:#f3f4f6;
@@ -15,7 +14,6 @@ body{
   display:flex;
   justify-content:center;
 }
-
 .app{
   background:#fff;
   max-width:420px;
@@ -169,18 +167,17 @@ input,select{
 </div>
 
 <script>
-/* ===== DATA ===== */
+/* DATA */
 let records = JSON.parse(localStorage.getItem("records")||"[]");
 let companies = JSON.parse(localStorage.getItem("companies")||'["Gospel Light Christian Church"]');
 let foundRecord=null;
 
-/* ===== DATE ===== */
+/* DATE KEY */
 function todayKey(){
-  const d=new Date();
-  return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
+  return new Date().toISOString().slice(0,10);
 }
 
-/* ===== CLOCK ===== */
+/* CLOCK */
 function updateTime(){
   const d=new Date();
   dateLine.textContent=d.toLocaleDateString(undefined,{weekday:"long",year:"numeric",month:"long",day:"numeric"});
@@ -188,18 +185,18 @@ function updateTime(){
 }
 setInterval(updateTime,1000);updateTime();
 
-/* ===== UTIL ===== */
+/* UTIL */
 function sanitizeHp(i){i.value=i.value.replace(/\D/g,'').slice(0,8)}
 function isValidHp(h){return /^\d{8}$/.test(h)}
 
-/* ===== NAV ===== */
+/* NAV */
 function show(id){
   document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
 }
 function goMain(){show("main")}
 
-/* ===== SIGN IN ===== */
+/* SIGN IN */
 function openSignIn(){
   inName.value=inHp.value=inPurpose.value=newCompany.value="";
   newCompanyBox.style.display="none";
@@ -238,6 +235,7 @@ function submitSignIn(){
 
   if(!name||!hp||!company||!purpose){showPopup("Error","Fill all fields");return}
   if(!isValidHp(hp)){showPopup("Error","Handphone must be 8 digits");return}
+
   if(records.find(r=>!r.outTime&&(r.name===name||r.hp===hp))){
     showPopup("Already Signed‑In","Please sign‑out first");return
   }
@@ -252,7 +250,7 @@ function submitSignIn(){
   showPopup("✅ Sign‑In Successful",name+" signed in successfully");
 }
 
-/* ===== SIGN OUT ===== */
+/* SIGN OUT */
 function openSignOut(){
   outHp.value="";
   foundInfo.style.display="none";
@@ -260,16 +258,15 @@ function openSignOut(){
   foundRecord=null;
 
   const today=todayKey();
-  const todayRecords=records.filter(r=>r.dateKey===today);
-  totalToday.textContent="Total visitors today: "+todayRecords.length;
-  stillInside.textContent="Visitors still inside: "+todayRecords.filter(r=>!r.outTime).length;
+  totalToday.textContent="Total visitors today: "+records.filter(r=>r.dateKey===today).length;
+  stillInside.textContent="Visitors still inside: "+records.filter(r=>r.outTime==="").length;
 
   show("signOut");
 }
 
 outHp.addEventListener("input",()=>{
   if(!isValidHp(outHp.value))return;
-  const r=records.find(x=>!x.outTime&&x.hp===outHp.value);
+  const r=records.find(x=>x.outTime===""&&x.hp===outHp.value);
   if(!r)return;
   foundRecord=r;
   foundName.textContent=r.name;
@@ -285,7 +282,7 @@ function confirmSignOut(){
   showPopup("✅ Sign‑Out Successful",foundRecord.name+" has signed out");
 }
 
-/* ===== POPUP ===== */
+/* POPUP */
 function showPopup(t,m){
   popupTitle.textContent=t;
   popupMsg.textContent=m;
@@ -293,7 +290,7 @@ function showPopup(t,m){
 }
 function closePopup(){popup.style.display="none";goMain()}
 
-/* ===== ABOUT ===== */
+/* ABOUT */
 function showAbout(){
   showPopup(
     "About VisitorPass",
