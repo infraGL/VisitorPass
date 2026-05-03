@@ -28,6 +28,7 @@ body {
   flex-direction:column;
 }
 
+/* LOGO */
 #logo {
   text-align:center;
   margin-bottom:10px;
@@ -37,52 +38,55 @@ body {
   width:100%;
 }
 
+/* HEADER */
 h1 {
   text-align:center;
   margin-bottom:6px;
 }
-
-#dateTime {
+#dateDay {
   text-align:center;
   font-weight:600;
-  margin:14px 0 20px;
+}
+#timeNow {
+  text-align:center;
+  font-size:18px;
+  margin-bottom:16px;
 }
 
-.section {
-  flex-grow:1;
-}
+/* SECTIONS */
+.section { flex-grow:1; }
+.field { margin-bottom:12px; }
 
-.field {
-  margin-bottom:12px;
-}
-
-input, select {
+input {
   width:100%;
   padding:12px;
   border-radius:10px;
   border:1px solid #ccc;
 }
 
+/* BUTTONS */
 .btn {
   width:68%;
   margin:0 auto 12px;
+  display:block;
   padding:12px;
   border:none;
   border-radius:14px;
   font-weight:600;
   cursor:pointer;
 }
+.primary { background:#22c55e;color:#fff }
+.danger { background:#ef4444;color:#fff }
+.secondary { background:#3b82f6;color:#fff }
 
-.primary { background:#22c55e; color:#fff; }
-.danger { background:#ef4444; color:#fff; }
-.secondary { background:#3b82f6; color:#fff; }
-
+/* ERRORS */
 .error {
   color:#dc2626;
   font-weight:600;
   display:none;
 }
 
+/* POPUP */
 .overlay {
   position:fixed;
   inset:0;
@@ -91,12 +95,12 @@ input, select {
   align-items:center;
   justify-content:center;
 }
-
 .popup {
   background:#fff;
   padding:24px;
   border-radius:16px;
   text-align:center;
+  max-width:320px;
 }
 </style>
 </head>
@@ -105,34 +109,43 @@ input, select {
 <div class="app">
 
 <div id="logo">
-  <img src="Gospel-Logo.png" alt="Gospel Light Christian Church">
+  <img src="Gospel-Logo.png" alt="Gospel Light Christian Church Logo">
 </div>
 
 <h1>VisitorPass</h1>
-<div id="dateTime"></div>
+<div id="dateDay"></div>
+<div id="timeNow"></div>
 
+<!-- MAIN -->
 <div id="main" class="section">
   <button class="btn primary" onclick="openSignIn()">Sign‑In</button>
   <button class="btn danger" onclick="openSignOut()">Sign‑Out</button>
 
-  <div style="font-size:12px;text-align:center;color:#555;margin-top:30px;">
+  <div style="margin-top:40px;font-size:12px;text-align:center;color:#555;line-height:1.5;">
     <strong>Personal Data Protection Notice (PDPA)</strong><br>
-    Information collected is for internal visitor registration only.
+    The personal data provided will be collected and used solely for internal
+    visitor registration, security, and record‑keeping purposes.
+    This information will not be disclosed to external parties and will be
+    retained only for as long as required to fulfil these purposes,
+    in accordance with applicable data protection laws.
   </div>
 
-  <div style="font-size:12px;text-align:center;color:#0066cc;text-decoration:underline;margin-top:12px;cursor:pointer"
+  <div style="margin-top:20px;font-size:12px;text-align:center;color:#0066cc;text-decoration:underline;cursor:pointer"
        onclick="showAboutPopup()">
     About VisitorPass Visitor Management System
   </div>
 
-  <div style="font-size:11px;text-align:center;color:#888;margin-top:10px;">
+  <div style="margin-top:10px;font-size:11px;text-align:center;color:#888;">
     VisitorPass v1.0
   </div>
 </div>
 
+<!-- SIGN IN -->
 <div id="signIn" class="section" style="display:none;">
   <div class="field"><input id="inName" placeholder="Name"></div>
-  <div class="field"><input id="inHp" placeholder="Handphone (8 digits)" maxlength="8" oninput="sanitizeHp(this)"></div>
+  <div class="field">
+    <input id="inHp" placeholder="Handphone (8 digits)" maxlength="8" oninput="sanitizeHp(this)">
+  </div>
   <div class="field"><input id="inCompany" placeholder="Company"></div>
   <div class="field"><input id="inPurpose" placeholder="Purpose"></div>
   <div id="inError" class="error"></div>
@@ -140,6 +153,7 @@ input, select {
   <button class="btn secondary" onclick="backToMain()">Back</button>
 </div>
 
+<!-- POPUP -->
 <div id="popup" class="overlay">
   <div class="popup">
     <h2 id="popupTitle"></h2>
@@ -149,54 +163,77 @@ input, select {
 </div>
 
 <script>
-/* ===== ALWAYS DEFINE CLICK HANDLERS FIRST ===== */
+/* ===== DATA ===== */
+let records = JSON.parse(localStorage.getItem("records") || "[]");
+
+/* ===== CLOCK ===== */
+function updateDateTime(){
+  const d = new Date();
+  dateDay.textContent =
+    d.toLocaleDateString(undefined,{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+  timeNow.textContent = d.toLocaleTimeString();
+}
+updateDateTime();
+setInterval(updateDateTime,1000);
+
+/* ===== UTIL ===== */
+function sanitizeHp(i){ i.value=i.value.replace(/\D/g,'').slice(0,8); }
+function isValidHp(hp){ return /^\d{8}$/.test(hp); }
+
+/* ===== NAV ===== */
 function openSignIn(){
+  inName.value=""; inHp.value=""; inCompany.value=""; inPurpose.value="";
+  inError.style.display="none";
   main.style.display="none";
   signIn.style.display="block";
 }
 function openSignOut(){
-  alert("Sign‑Out will be added next.");
+  const active = records.filter(r=>!r.outTime);
+  if(active.length===0){
+    showPopup("No Visitors","There are no visitors to sign‑out.");
+    return;
+  }
+  const r = active[0];
+  r.outTime = new Date().toLocaleString();
+  localStorage.setItem("records",JSON.stringify(records));
+  showPopup("✅ Sign‑Out Successful", r.name + " has signed out.");
 }
 function backToMain(){
   signIn.style.display="none";
   main.style.display="block";
 }
-function showAboutPopup(){
-  showPopup(
-    "About VisitorPass",
-    "This application was developed for Gospel Light Christian Church.\nInternal use only."
-  );
-}
 
-/* ===== UTILITIES ===== */
-function sanitizeHp(input){
-  input.value = input.value.replace(/\D/g,'').slice(0,8);
-}
-function isValidHp(hp){
-  return /^\d{8}$/.test(hp);
-}
-
-/* ===== SIGN‑IN (LOCAL ONLY FOR NOW) ===== */
+/* ===== SIGN IN ===== */
 function submitSignIn(){
   const name=inName.value.trim();
   const hp=inHp.value.trim();
   const company=inCompany.value.trim();
   const purpose=inPurpose.value.trim();
-
   inError.style.display="none";
 
   if(!name||!hp||!company||!purpose){
     inError.textContent="❌ Please fill in all fields.";
-    inError.style.display="block";
-    return;
+    inError.style.display="block"; return;
   }
   if(!isValidHp(hp)){
-    inError.textContent="❌ Handphone must be 8 digits.";
-    inError.style.display="block";
+    inError.textContent="❌ Handphone must be exactly 8 digits.";
+    inError.style.display="block"; return;
+  }
+
+  const conflict = records.find(r=>!r.outTime && (r.name===name || r.hp===hp));
+  if(conflict){
+    showPopup("⚠️ Already Signed‑In","Please sign‑out before signing‑in again.");
     return;
   }
 
-  showPopup("✅ Sign‑In Successful",name+" signed in successfully.");
+  records.push({
+    name,hp,company,purpose,
+    inTime:new Date().toLocaleString(),
+    outTime:""
+  });
+  localStorage.setItem("records",JSON.stringify(records));
+
+  showPopup("✅ Sign‑In Successful", name + " signed in successfully.");
 }
 
 /* ===== POPUPS ===== */
@@ -210,12 +247,15 @@ function closePopup(){
   backToMain();
 }
 
-/* ===== CLOCK ===== */
-function updateDateTime(){
-  dateTime.textContent=new Date().toLocaleString();
+/* ===== ABOUT ===== */
+function showAboutPopup(){
+  showPopup(
+    "About VisitorPass",
+    "This application was developed and is a property of Gospel Light Christian Church.\n\n" +
+    "It is intended for internal use only and not for external distribution or sale.\n\n" +
+    "For inquiries, please contact Hp 9178 4990 or email infra@gospellight.sg."
+  );
 }
-updateDateTime();
-setInterval(updateDateTime,1000);
 </script>
 
 </body>
