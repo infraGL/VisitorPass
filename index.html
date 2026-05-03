@@ -23,41 +23,25 @@ body {
   padding:20px;
   border-radius:16px;
   box-shadow:0 10px 25px rgba(0,0,0,.12);
-  max-height:90vh;
   display:flex;
   flex-direction:column;
 }
 
 /* LOGO */
-#logo {
-  text-align:center;
-  margin-bottom:10px;
-}
-#logo img {
-  max-width:200px;
-  width:100%;
-}
+#logo { text-align:center; margin-bottom:10px; }
+#logo img { max-width:200px; width:100%; }
 
 /* HEADER */
-h1 {
-  text-align:center;
-  margin-bottom:6px;
-}
-#dateDay {
-  text-align:center;
-  font-weight:600;
-}
-#timeNow {
-  text-align:center;
-  font-size:18px;
-  margin-bottom:16px;
-}
+h1 { text-align:center; margin-bottom:6px; }
+#dateLine { text-align:center; font-weight:600; }
+#timeLine { text-align:center; font-size:18px; margin-bottom:18px; }
 
 /* SECTIONS */
-.section { flex-grow:1; }
+.section { display:none; }
+.section.active { display:block; }
 .field { margin-bottom:12px; }
 
-input {
+input, select {
   width:100%;
   padding:12px;
   border-radius:10px;
@@ -66,7 +50,7 @@ input {
 
 /* BUTTONS */
 .btn {
-  width:68%;
+  width:70%;
   margin:0 auto 12px;
   display:block;
   padding:12px;
@@ -75,15 +59,28 @@ input {
   font-weight:600;
   cursor:pointer;
 }
-.primary { background:#22c55e;color:#fff }
-.danger { background:#ef4444;color:#fff }
-.secondary { background:#3b82f6;color:#fff }
+.primary { background:#22c55e; color:#fff; }
+.danger { background:#ef4444; color:#fff; }
+.secondary { background:#3b82f6; color:#fff; }
 
 /* ERRORS */
-.error {
-  color:#dc2626;
+.error { color:#dc2626; font-weight:600; display:none; }
+
+/* VISITOR LIST */
+.nameBtn {
+  width:100%;
+  text-align:left;
+  padding:12px;
+  border:none;
+  border-radius:12px;
+  margin-bottom:10px;
   font-weight:600;
-  display:none;
+  cursor:pointer;
+  background:#e5e7eb;
+}
+.nameBtn.active {
+  background:#3b82f6;
+  color:#fff;
 }
 
 /* POPUP */
@@ -109,15 +106,15 @@ input {
 <div class="app">
 
 <div id="logo">
-  <img src="Gospel-Logo.png" alt="Gospel Light Christian Church Logo">
+  <img src="Gospel-Logo.png">
 </div>
 
 <h1>VisitorPass</h1>
-<div id="dateDay"></div>
-<div id="timeNow"></div>
+<div id="dateLine"></div>
+<div id="timeLine"></div>
 
 <!-- MAIN -->
-<div id="main" class="section">
+<div id="main" class="section active">
   <button class="btn primary" onclick="openSignIn()">Sign‑In</button>
   <button class="btn danger" onclick="openSignOut()">Sign‑Out</button>
 
@@ -131,7 +128,7 @@ input {
   </div>
 
   <div style="margin-top:20px;font-size:12px;text-align:center;color:#0066cc;text-decoration:underline;cursor:pointer"
-       onclick="showAboutPopup()">
+       onclick="showAbout()">
     About VisitorPass Visitor Management System
   </div>
 
@@ -141,16 +138,38 @@ input {
 </div>
 
 <!-- SIGN IN -->
-<div id="signIn" class="section" style="display:none;">
+<div id="signIn" class="section">
   <div class="field"><input id="inName" placeholder="Name"></div>
+  <div class="field"><input id="inHp" placeholder="Handphone (8 digits)" maxlength="8" oninput="sanitizeHp(this)"></div>
+
   <div class="field">
-    <input id="inHp" placeholder="Handphone (8 digits)" maxlength="8" oninput="sanitizeHp(this)">
+    <select id="inCompany" onchange="companyChanged()"></select>
   </div>
-  <div class="field"><input id="inCompany" placeholder="Company"></div>
+  <div class="field" id="newCompanyBox" style="display:none;">
+    <input id="newCompany" placeholder="Enter new company name">
+  </div>
+
   <div class="field"><input id="inPurpose" placeholder="Purpose"></div>
   <div id="inError" class="error"></div>
+
   <button class="btn primary" onclick="submitSignIn()">Confirm Sign‑In</button>
-  <button class="btn secondary" onclick="backToMain()">Back</button>
+  <button class="btn secondary" onclick="goMain()">Back</button>
+</div>
+
+<!-- SIGN OUT -->
+<div id="signOut" class="section">
+  <div id="signOutMsg" style="text-align:center;font-weight:600;margin-bottom:12px;">
+    Select Visitor to Sign‑Out
+  </div>
+
+  <div id="visitorList"></div>
+
+  <div id="hpBox" style="display:none;">
+    <input id="outHp" placeholder="Confirm Handphone (8 digits)" maxlength="8" oninput="sanitizeHp(this)">
+    <button class="btn secondary" onclick="confirmSignOut()">Confirm</button>
+  </div>
+
+  <button class="btn secondary" onclick="goMain()">Back</button>
 </div>
 
 <!-- POPUP -->
@@ -158,105 +177,13 @@ input {
   <div class="popup">
     <h2 id="popupTitle"></h2>
     <p id="popupMsg"></p>
-    <button class="btn secondary" onclick="closePopup()">OK</button>
+    <button class="btn secondary" onclick="closePopup()">Back</button>
   </div>
 </div>
 
 <script>
 /* ===== DATA ===== */
 let records = JSON.parse(localStorage.getItem("records") || "[]");
+let companies = JSON.parse(localStorage.getItem("companies") || '["Gospel Light Christian Church"]');
+let selectedIndex = null;
 
-/* ===== CLOCK ===== */
-function updateDateTime(){
-  const d = new Date();
-  dateDay.textContent =
-    d.toLocaleDateString(undefined,{weekday:"long",year:"numeric",month:"long",day:"numeric"});
-  timeNow.textContent = d.toLocaleTimeString();
-}
-updateDateTime();
-setInterval(updateDateTime,1000);
-
-/* ===== UTIL ===== */
-function sanitizeHp(i){ i.value=i.value.replace(/\D/g,'').slice(0,8); }
-function isValidHp(hp){ return /^\d{8}$/.test(hp); }
-
-/* ===== NAV ===== */
-function openSignIn(){
-  inName.value=""; inHp.value=""; inCompany.value=""; inPurpose.value="";
-  inError.style.display="none";
-  main.style.display="none";
-  signIn.style.display="block";
-}
-function openSignOut(){
-  const active = records.filter(r=>!r.outTime);
-  if(active.length===0){
-    showPopup("No Visitors","There are no visitors to sign‑out.");
-    return;
-  }
-  const r = active[0];
-  r.outTime = new Date().toLocaleString();
-  localStorage.setItem("records",JSON.stringify(records));
-  showPopup("✅ Sign‑Out Successful", r.name + " has signed out.");
-}
-function backToMain(){
-  signIn.style.display="none";
-  main.style.display="block";
-}
-
-/* ===== SIGN IN ===== */
-function submitSignIn(){
-  const name=inName.value.trim();
-  const hp=inHp.value.trim();
-  const company=inCompany.value.trim();
-  const purpose=inPurpose.value.trim();
-  inError.style.display="none";
-
-  if(!name||!hp||!company||!purpose){
-    inError.textContent="❌ Please fill in all fields.";
-    inError.style.display="block"; return;
-  }
-  if(!isValidHp(hp)){
-    inError.textContent="❌ Handphone must be exactly 8 digits.";
-    inError.style.display="block"; return;
-  }
-
-  const conflict = records.find(r=>!r.outTime && (r.name===name || r.hp===hp));
-  if(conflict){
-    showPopup("⚠️ Already Signed‑In","Please sign‑out before signing‑in again.");
-    return;
-  }
-
-  records.push({
-    name,hp,company,purpose,
-    inTime:new Date().toLocaleString(),
-    outTime:""
-  });
-  localStorage.setItem("records",JSON.stringify(records));
-
-  showPopup("✅ Sign‑In Successful", name + " signed in successfully.");
-}
-
-/* ===== POPUPS ===== */
-function showPopup(t,m){
-  popupTitle.textContent=t;
-  popupMsg.textContent=m;
-  popup.style.display="flex";
-}
-function closePopup(){
-  popup.style.display="none";
-  backToMain();
-}
-
-/* ===== ABOUT ===== */
-function showAboutPopup(){
-  showPopup(
-    "About VisitorPass",
-    "This application was developed and is a property of Gospel Light Christian Church.\n\n" +
-    "It is intended for internal use only and not for external distribution or sale.\n\n" +
-    "For inquiries, please contact Hp 9178 4990 or email infra@gospellight.sg."
-  );
-}
-</script>
-
-</body>
-</html>
