@@ -89,7 +89,7 @@ input,select{
 <div class="app">
 
 <div id="logo">
-  <img src="Gospel-Logo.png">
+  <img src="Gospel-Logo.png" alt="Logo">
 </div>
 
 <h1>VisitorPass</h1>
@@ -167,17 +167,21 @@ input,select{
 </div>
 
 <script>
-/* DATA */
+/* ================= FLOW A URL (EXCEL SIGN‑IN) ================= */
+const FLOW_A_URL =
+"https://6adc8542497ee52f9948699f4ec423.8e.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/244ce5b70b2648dc8a28a6cc5170d121/triggers/manual/paths/invoke?api-version=1";
+
+/* ================= DATA ================= */
 let records = JSON.parse(localStorage.getItem("records")||"[]");
 let companies = JSON.parse(localStorage.getItem("companies")||'["Gospel Light Christian Church"]');
 let foundRecord=null;
 
-/* DATE KEY */
+/* ================= DATE ================= */
 function todayKey(){
   return new Date().toISOString().slice(0,10);
 }
 
-/* CLOCK */
+/* ================= CLOCK ================= */
 function updateTime(){
   const d=new Date();
   dateLine.textContent=d.toLocaleDateString(undefined,{weekday:"long",year:"numeric",month:"long",day:"numeric"});
@@ -185,18 +189,18 @@ function updateTime(){
 }
 setInterval(updateTime,1000);updateTime();
 
-/* UTIL */
+/* ================= UTIL ================= */
 function sanitizeHp(i){i.value=i.value.replace(/\D/g,'').slice(0,8)}
 function isValidHp(h){return /^\d{8}$/.test(h)}
 
-/* NAV */
+/* ================= NAV ================= */
 function show(id){
   document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
 }
 function goMain(){show("main")}
 
-/* SIGN IN */
+/* ================= SIGN IN ================= */
 function openSignIn(){
   inName.value=inHp.value=inPurpose.value=newCompany.value="";
   newCompanyBox.style.display="none";
@@ -240,6 +244,7 @@ function submitSignIn(){
     showPopup("Already Signed‑In","Please sign‑out first");return
   }
 
+  /* LOCAL SAVE */
   records.push({
     name,hp,company,purpose,
     inTime:new Date().toLocaleString(),
@@ -247,10 +252,26 @@ function submitSignIn(){
     outTime:""
   });
   localStorage.setItem("records",JSON.stringify(records));
+
+  /* ===== PHASE 1: EXCEL SIGN‑IN (NON‑BLOCKING) ===== */
+  fetch(FLOW_A_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      date: new Date().toLocaleDateString(),
+      day: new Date().toLocaleDateString(undefined,{weekday:"long"}),
+      timeIn: new Date().toLocaleTimeString(),
+      name: name,
+      hp: hp,
+      company: company,
+      purpose: purpose
+    })
+  }).catch(()=>{});
+
   showPopup("✅ Sign‑In Successful",name+" signed in successfully");
 }
 
-/* SIGN OUT */
+/* ================= SIGN OUT ================= */
 function openSignOut(){
   outHp.value="";
   foundInfo.style.display="none";
@@ -282,7 +303,7 @@ function confirmSignOut(){
   showPopup("✅ Sign‑Out Successful",foundRecord.name+" has signed out");
 }
 
-/* POPUP */
+/* ================= POPUP ================= */
 function showPopup(t,m){
   popupTitle.textContent=t;
   popupMsg.textContent=m;
@@ -290,7 +311,7 @@ function showPopup(t,m){
 }
 function closePopup(){popup.style.display="none";goMain()}
 
-/* ABOUT */
+/* ================= ABOUT ================= */
 function showAbout(){
   showPopup(
     "About VisitorPass",
