@@ -172,9 +172,12 @@ input,select{
 </div>
 
 <script>
-/* ================= FLOW A URL (EXCEL SIGN‑IN) ================= */
+/* ================= FLOW URLS ================= */
 const FLOW_A_URL =
-"https://6adc8542497ee52f9948699f4ec423.8e.environment.api.powerplatform.com/powerautomate/automations/direct/workflows/244ce5b70b2648dc8a28a6cc5170d121/triggers/manual/paths/invoke?api-version=1";
+"https://6adc8542497ee52f9948699f4ec423.8e.environment.api.powerplatform.com/powerautomate/automations/direct/workflows/244ce5b70b2648dc8a28a6cc5170d121/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=vmFXCNCQkZKVOP1-yIyb4r4rtFIo2iZlxy3Q6gg__IY";
+
+const FLOW_C_URL =
+"https://6adc8542497ee52f9948699f4ec423.8e.environment.api.powerplatform.com/powerautomate/automations/direct/workflows/4fecea6e48c44688beb736a94fabbdaa/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=BnEzWN-Xd_TrPPmFt83GYa7VUcg_BhQAjgSgtL7AdXo";
 
 /* ================= DATA ================= */
 let records = JSON.parse(localStorage.getItem("records")||"[]");
@@ -249,7 +252,6 @@ function submitSignIn(){
     showPopup("Already Signed‑In","Please sign‑out first");return
   }
 
-  /* LOCAL SAVE */
   records.push({
     name,hp,company,purpose,
     inTime:new Date().toLocaleString(),
@@ -258,7 +260,6 @@ function submitSignIn(){
   });
   localStorage.setItem("records",JSON.stringify(records));
 
-  /* ===== PHASE 1: EXCEL SIGN‑IN (NON‑BLOCKING) ===== */
   fetch(FLOW_A_URL,{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
@@ -303,8 +304,19 @@ outHp.addEventListener("input",()=>{
 
 function confirmSignOut(){
   if(!foundRecord){showPopup("Error","Key in correct Handphone number");return}
+
   foundRecord.outTime=new Date().toLocaleString();
   localStorage.setItem("records",JSON.stringify(records));
+
+  fetch(FLOW_C_URL,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      hp: foundRecord.hp,
+      timeOut: foundRecord.outTime
+    })
+  }).catch(()=>{});
+
   showPopup("✅ Sign‑Out Successful",foundRecord.name+" has signed out");
 }
 
