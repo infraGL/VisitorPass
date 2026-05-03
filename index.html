@@ -50,93 +50,34 @@ h1 {
   margin:14px 0 20px;
 }
 
-/* CONTENT AREA */
-.section {
-  flex-grow:1;
-  overflow-y:auto;
-}
-
-/* INPUT FIELDS */
+.section { flex-grow:1; overflow-y:auto; }
 .field { margin-bottom:12px; }
 input, select {
   width:100%;
   padding:12px;
   border-radius:10px;
   border:1px solid #ccc;
-  font-size:14px;
 }
 
-/* BUTTONS */
 .btn {
   width:68%;
   margin:0 auto 12px;
-  display:block;
   padding:12px;
   border:none;
   border-radius:14px;
   font-weight:600;
   cursor:pointer;
 }
-.primary { background:#22c55e; color:#fff; }
-.danger  { background:#ef4444; color:#fff; }
-.secondary { background:#3b82f6; color:#fff; }
+.primary { background:#22c55e;color:#fff }
+.danger { background:#ef4444;color:#fff }
+.secondary { background:#3b82f6;color:#fff }
 
-/* SIGN‑OUT */
-#signOutMsg {
-  text-align:center;
-  font-weight:600;
-  margin-bottom:12px;
-}
-.nameBtn {
-  width:100%;
-  text-align:left;
-  padding:14px;
-  border:none;
-  border-radius:14px;
-  margin-bottom:10px;
-  font-weight:600;
-  cursor:pointer;
-  background:#e5e7eb;
-}
-.nameBtn.active {
-  background:#3b82f6;
-  color:#fff;
-}
-
-/* ERRORS */
 .error {
   color:#dc2626;
   font-weight:600;
-  margin-bottom:12px;
   display:none;
 }
 
-/* PDPA */
-#pdpaNotice {
-  margin-top:40px;
-  font-size:12px;
-  color:#555;
-  text-align:center;
-  line-height:1.5;
-}
-
-/* FOOTER */
-.footerLink {
-  margin-top:12px;
-  font-size:12px;
-  text-align:center;
-  color:#0066cc;
-  text-decoration:underline;
-  cursor:pointer;
-}
-#version {
-  margin-top:10px;
-  font-size:11px;
-  color:#888;
-  text-align:center;
-}
-
-/* POPUP */
 .overlay {
   position:fixed;
   inset:0;
@@ -144,14 +85,12 @@ input, select {
   display:none;
   align-items:center;
   justify-content:center;
-  z-index:999;
 }
 .popup {
   background:#fff;
   padding:24px;
   border-radius:16px;
   text-align:center;
-  max-width:320px;
 }
 </style>
 </head>
@@ -166,199 +105,91 @@ input, select {
 <h1>VisitorPass</h1>
 <div id="dateTime"></div>
 
-<!-- MAIN -->
 <div id="main" class="section">
   <button class="btn primary" onclick="openSignIn()">Sign‑In</button>
   <button class="btn danger" onclick="openSignOut()">Sign‑Out</button>
-
-  <div id="pdpaNotice">
-    <strong>Personal Data Protection Notice (PDPA)</strong><br>
-    The personal data provided will be collected and used solely for
-    internal visitor registration, security, and record‑keeping purposes.
-    This information will not be disclosed to external parties and will be
-    retained only for as long as required to fulfil these purposes, in
-    accordance with applicable data protection laws.
-  </div>
-
-  <div class="footerLink" onclick="showAboutPopup()">
-    About VisitorPass Visitor Management System
-  </div>
-
-  <div class="footerLink" onclick="showAdminPopup()">
-    Admin Access
-  </div>
-
-  <div id="version">VisitorPass v1.0</div>
 </div>
 
-<!-- SIGN‑IN -->
 <div id="signIn" class="section" style="display:none;">
-  <div class="field"><input id="inName" placeholder="Name"></div>
-
-  <div class="field">
-    <input id="inHp" placeholder="Handphone No (8 digits)"
-           inputmode="numeric" maxlength="8"
-           oninput="sanitizeHp(this)">
-  </div>
-
-  <div class="field">
-    <select id="inCompany" onchange="handleCompanyChange()"></select>
-  </div>
-
-  <div class="field" id="newCompanyBox" style="display:none;">
-    <input id="newCompany" placeholder="Enter new company name">
-  </div>
-
-  <div class="field"><input id="inPurpose" placeholder="Purpose"></div>
-
+  <input id="inName" placeholder="Name">
+  <input id="inHp" placeholder="Handphone (8 digits)" maxlength="8" oninput="sanitizeHp(this)">
+  <select id="inCompany" onchange="handleCompanyChange()"></select>
+  <input id="newCompany" placeholder="New Company" style="display:none">
+  <input id="inPurpose" placeholder="Purpose">
   <div id="inError" class="error"></div>
-
-  <button class="btn primary" onclick="submitSignIn()">Confirm Sign‑In</button>
+  <button class="btn primary" onclick="submitSignIn()">Confirm</button>
   <button class="btn secondary" onclick="backToMain()">Back</button>
 </div>
 
-<!-- SIGN‑OUT -->
-<div id="signOut" class="section" style="display:none;">
-  <div id="signOutMsg"></div>
-  <div id="visitorList"></div>
-
-  <div class="field" id="hpBox" style="display:none;">
-    <input id="outHp" placeholder="Confirm Handphone No (8 digits)"
-           inputmode="numeric" maxlength="8"
-           oninput="sanitizeHp(this)">
-  </div>
-
-  <div id="outError" class="error"></div>
-
-  <button id="confirmOut" class="btn secondary" style="display:none;" onclick="submitSignOut()">
-    Confirm Sign‑Out
-  </button>
-
-  <button class="btn secondary" onclick="backToMain()">Back</button>
-</div>
-</div>
-
-<!-- POPUP -->
 <div id="popup" class="overlay">
   <div class="popup">
     <h2 id="popupTitle"></h2>
     <p id="popupMsg"></p>
-    <button id="popupBtn" class="btn secondary"></button>
+    <button class="btn secondary" onclick="closePopup()">OK</button>
   </div>
 </div>
 
 <script>
-/* === POWER AUTOMATE ENDPOINTS === */
-const TIMEIN_API =
-  "https://6adc8542497ee52f9948699f4ec423.8e.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/244ce5b70b2648dc8a28a6cc5170d121/triggers/manual/paths/invoke?api-version=1";
+const TIMEIN_API="https://6adc8542497ee52f9948699f4ec423.8e.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/244ce5b70b2648dc8a28a6cc5170d121/triggers/manual/paths/invoke?api-version=1";
+const COMPANY_API="https://6adc8542497ee52f9948699f4ec423.8e.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/4fecea6e48c44688beb736a94fabbdaa/triggers/manual/paths/invoke?api-version=1";
+const ADDCOMPANY_API=COMPANY_API;
 
-const COMPANY_API =
-  "https://6adc8542497ee52f9948699f4ec423.8e.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/4fecea6e48c44688beb736a94fabbdaa/triggers/manual/paths/invoke?api-version=1";
-
-const ADDCOMPANY_API =
-  "https://6adc8542497ee52f9948699f4ec423.8e.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/4fecea6e48c44688beb736a94fabbdaa/triggers/manual/paths/invoke?api-version=1";
-
-/* LOCAL FALLBACK */
-const records = JSON.parse(localStorage.getItem("records") || "[]");
-let selectedIndex = null;
-
-/* DATE & TIME */
-function updateDateTime() {
-  const n = new Date();
-  dateTime.innerHTML =
-    n.toLocaleDateString(undefined,{weekday:"long",year:"numeric",month:"long",day:"numeric"}) +
-    "<br>" + n.toLocaleTimeString();
+function updateDateTime(){
+  dateTime.innerHTML=new Date().toLocaleString();
 }
-updateDateTime();
-setInterval(updateDateTime,1000);
+setInterval(updateDateTime,1000);updateDateTime();
 
-/* HP */
-function sanitizeHp(input) {
-  input.value = input.value.replace(/[^0-9]/g, '').slice(0,8);
-}
-function isValidHp(hp) {
-  return /^\d{8}$/.test(hp);
-}
+function sanitizeHp(i){ i.value=i.value.replace(/\D/g,'').slice(0,8); }
 
-/* NAV */
-function hideAll(){
-  main.style.display="none";
-  signIn.style.display="none";
-  signOut.style.display="none";
-  closePopup();
-}
-function backToMain(){
-  hideAll();
-  main.style.display="block";
-}
+function openSignIn(){ main.style.display="none"; signIn.style.display="block"; }
+function openSignOut(){ alert("Sign‑Out later"); }
+function backToMain(){ signIn.style.display="none"; main.style.display="block"; }
 
-/* LOAD COMPANIES */
 async function loadCompanies(){
-  const res = await fetch(COMPANY_API);
-  const companies = await res.json();
-  const select = document.getElementById("inCompany");
-  select.innerHTML = '<option value="">Select Company</option>';
-
-  companies.forEach(c => {
-    const opt = document.createElement("option");
-    opt.value = c.Company;
-    opt.textContent = c.Company;
-    select.appendChild(opt);
+  const res=await fetch(COMPANY_API);
+  const list=await res.json();
+  inCompany.innerHTML='<option value="">Select Company</option>';
+  list.forEach(c=>{
+    const o=document.createElement("option");
+    o.value=c.Company;o.textContent=c.Company;
+    inCompany.appendChild(o);
   });
-
-  const addOpt = document.createElement("option");
-  addOpt.value = "__NEW__";
-  addOpt.textContent = "+ Add new company";
-  select.appendChild(addOpt);
+  const add=document.createElement("option");
+  add.value="__NEW__";add.textContent="+ Add new company";
+  inCompany.appendChild(add);
 }
-// document.addEventListener("DOMContentLoaded", loadCompanies);
 
-/* COMPANY CHANGE */
 function handleCompanyChange(){
-  newCompanyBox.style.display =
-    inCompany.value === "__NEW__" ? "block" : "none";
+  newCompany.style.display=inCompany.value==="__NEW__"?"block":"none";
 }
 
-/* SIGN‑IN */
-function openSignIn(){
-  hideAll();
-  inName.value="";
-  inHp.value="";
-  inPurpose.value="";
-  newCompany.value="";
-  inError.style.display="none";
-  signIn.style.display="block";
+async function submitSignIn(){
+  let company=inCompany.value==="__NEW__"?newCompany.value.trim():inCompany.value;
+  if(!company){inError.textContent="Enter company";inError.style.display="block";return;}
+  await fetch(TIMEIN_API,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      date:new Date().toLocaleDateString(),
+      day:new Date().toLocaleDateString(undefined,{weekday:"long"}),
+      timeIn:new Date().toLocaleTimeString(),
+      name:inName.value,
+      hp:inHp.value,
+      company,
+      purpose:inPurpose.value
+    })
+  });
+  showPopup("Success","Signed in");
 }
 
-function submitSignIn(){
-  let name = inName.value.trim();
-  let hp = inHp.value.trim();
-  let company = inCompany.value;
-  let purpose = inPurpose.value.trim();
-  inError.style.display="none";
+function showPopup(t,m){
+  popupTitle.textContent=t;
+  popupMsg.textContent=m;
+  popup.style.display="flex";
+}
+function closePopup(){ popup.style.display="none"; backToMain(); }
 
-  if(company === "__NEW__"){
-    company = newCompany.value.trim();
-    if(!company){
-      inError.textContent="❌ Please enter a company name.";
-      inError.style.display="block";
-      return;
-    }
-    fetch(ADDCOMPANY_API,{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({ company })
-    }).then(loadCompanies);
-  }
-
-  if(!name || !hp || !company || !purpose){
-    inError.textContent="❌ Please fill in all fields.";
-    inError.style.display="block";
-    return;
-  }
-  if(!isValidHp(hp)){
-    inError.textContent="❌ Handphone number must be exactly 8 digits.";
-    inError.style.display="block";
-    return;
-  }
-
+loadCompanies();
+</script>
+</body>
+</html>
