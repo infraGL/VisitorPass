@@ -78,10 +78,7 @@ input, select {
   cursor:pointer;
   background:#e5e7eb;
 }
-.nameBtn.active {
-  background:#3b82f6;
-  color:#fff;
-}
+.nameBtn.active { background:#3b82f6; color:#fff; }
 
 /* POPUP */
 .overlay {
@@ -106,7 +103,7 @@ input, select {
 <div class="app">
 
 <div id="logo">
-  <img src="Gospel-Logo.png">
+  <img src="Gospel-Logo.png" alt="Gospel Light Christian Church Logo">
 </div>
 
 <h1>VisitorPass</h1>
@@ -161,7 +158,6 @@ input, select {
   <div id="signOutMsg" style="text-align:center;font-weight:600;margin-bottom:12px;">
     Select Visitor to Sign‑Out
   </div>
-
   <div id="visitorList"></div>
 
   <div id="hpBox" style="display:none;">
@@ -190,7 +186,8 @@ let selectedIndex = null;
 /* ===== CLOCK ===== */
 function updateTime(){
   const d = new Date();
-  dateLine.textContent = d.toLocaleDateString(undefined,{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+  dateLine.textContent =
+    d.toLocaleDateString(undefined,{weekday:"long",year:"numeric",month:"long",day:"numeric"});
   timeLine.textContent = d.toLocaleTimeString();
 }
 setInterval(updateTime,1000); updateTime();
@@ -283,12 +280,17 @@ function confirmSignOut(){
 }
 
 /* ===== POPUPS ===== */
-function showPopup(t,m){ popupTitle.textContent=t; popupMsg.textContent=m; popup.style.display="flex"; }
+function showPopup(t,m){
+  popupTitle.textContent=t;
+  popupMsg.textContent=m;
+  popup.style.display="flex";
+}
 function closePopup(){ popup.style.display="none"; goMain(); }
 
 /* ===== ABOUT ===== */
 function showAbout(){
-  showPopup("About VisitorPass",
+  showPopup(
+    "About VisitorPass",
     "This application was developed and is a property of Gospel Light Christian Church.\n\n"+
     "It is intended for internal use only and not for external distribution or sale.\n\n"+
     "For inquiries, please contact Hp 9178 4990 or email infra@gospellight.sg."
