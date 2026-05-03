@@ -89,7 +89,7 @@ input,select{
 <div class="app">
 
 <div id="logo">
-  <img src="Gospel-Logo.png" alt="Logo">
+  <img src="Gospel-Logo.png" alt="Gospel Light Christian Church">
 </div>
 
 <h1>VisitorPass</h1>
@@ -123,7 +123,10 @@ input,select{
 <!-- SIGN IN -->
 <div id="signIn" class="section">
   <div class="field"><input id="inName" placeholder="Name"></div>
-  <div class="field"><input id="inHp" placeholder="Handphone (8 digits)" maxlength="8" oninput="sanitizeHp(this)"></div>
+  <div class="field">
+    <input id="inHp" placeholder="Handphone (8 digits)" maxlength="8"
+           oninput="sanitizeHp(this)">
+  </div>
 
   <div class="field">
     <select id="inCompany" onchange="companyChanged()"></select>
@@ -145,7 +148,8 @@ input,select{
   <div class="counter" id="stillInside"></div>
 
   <div class="field">
-    <input id="outHp" placeholder="Enter Handphone (8 digits)" maxlength="8" oninput="sanitizeHp(this)">
+    <input id="outHp" placeholder="Enter Handphone (8 digits)" maxlength="8"
+           oninput="sanitizeHp(this)">
   </div>
 
   <div id="foundInfo" style="display:none;text-align:center;margin-bottom:12px;">
@@ -153,7 +157,8 @@ input,select{
     <div id="foundCompany"></div>
   </div>
 
-  <button id="doSignOut" class="btn danger" style="display:none;" onclick="confirmSignOut()">Sign‑Out</button>
+  <button id="doSignOut" class="btn danger" style="display:none;"
+          onclick="confirmSignOut()">Sign‑Out</button>
   <button class="btn secondary" onclick="goMain()">Back</button>
 </div>
 
@@ -169,7 +174,7 @@ input,select{
 <script>
 /* ================= FLOW A URL (EXCEL SIGN‑IN) ================= */
 const FLOW_A_URL =
-"https://6adc8542497ee52f9948699f4ec423.8e.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/244ce5b70b2648dc8a28a6cc5170d121/triggers/manual/paths/invoke?api-version=1";
+"https://6adc8542497ee52f9948699f4ec423.8e.environment.api.powerplatform.com/powerautomate/automations/direct/workflows/244ce5b70b2648dc8a28a6cc5170d121/triggers/manual/paths/invoke?api-version=1";
 
 /* ================= DATA ================= */
 let records = JSON.parse(localStorage.getItem("records")||"[]");
@@ -254,17 +259,17 @@ function submitSignIn(){
   localStorage.setItem("records",JSON.stringify(records));
 
   /* ===== PHASE 1: EXCEL SIGN‑IN (NON‑BLOCKING) ===== */
-  fetch(FLOW_A_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      date: new Date().toLocaleDateString(),
-      day: new Date().toLocaleDateString(undefined,{weekday:"long"}),
-      timeIn: new Date().toLocaleTimeString(),
-      name: name,
-      hp: hp,
-      company: company,
-      purpose: purpose
+  fetch(FLOW_A_URL,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      date:new Date().toLocaleDateString(),
+      day:new Date().toLocaleDateString(undefined,{weekday:"long"}),
+      timeIn:new Date().toLocaleTimeString(),
+      name:name,
+      hp:hp,
+      company:company,
+      purpose:purpose
     })
   }).catch(()=>{});
 
