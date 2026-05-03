@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>VisitorPass</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+  font-family: system-ui, Arial, sans-serif;
+  background:#f3f4f6;
+  padding:20px;
+  display:flex;
+  justify-content:center;
+}
+
+.app {
+  background:#fff;
+  max-width:420px;
+  width:100%;
+  padding:20px;
+  border-radius:16px;
+  box-shadow:0 10px 25px rgba(0,0,0,.12);
+  max-height:90vh;
+  display:flex;
+  flex-direction:column;
+}
+
+/* LOGO */
+#logo {
+  text-align:center;
+  margin-bottom:10px;
+}
+#logo img {
+  max-width:200px;
+  width:100%;
+  height:auto;
+}
+
+h1 {
+  text-align:center;
+  margin-bottom:6px;
+}
+
+#dateTime {
+  text-align:center;
+  font-weight:600;
+  margin:14px 0 20px;
+}
+
+/* CONTENT AREA */
+.section {
+  flex-grow:1;
+  overflow-y:auto;
+}
+
+/* INPUT FIELDS */
+.field { margin-bottom:12px; }
+input {
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid #ccc;
+  font-size:14px;
+}
+
+/* BUTTONS */
+.btn {
+  width:68%;
+  margin:0 auto 12px;
+  display:block;
+  padding:12px;
+  border:none;
+  border-radius:14px;
+  font-weight:600;
+  cursor:pointer;
+}
+.primary { background:#22c55e; color:#fff; }
+.danger  { background:#ef4444; color:#fff; }
+.secondary { background:#3b82f6; color:#fff; }
+
+/* SIGN‑OUT */
+#signOutMsg {
+  text-align:center;
+  font-weight:600;
+  margin-bottom:12px;
+}
+.nameBtn {
+  width:100%;
+  text-align:left;
+  padding:14px;
+  border:none;
+  border-radius:14px;
+  margin-bottom:10px;
+  font-weight:600;
+  cursor:pointer;
+  background:#e5e7eb;
+}
+.nameBtn.active {
+  background:#3b82f6;
+  color:#fff;
+}
+
+/* ERRORS */
+.error {
+  color:#dc2626;
+  font-weight:600;
+  margin-bottom:12px;
+  display:none;
+}
+
+/* PDPA */
+#pdpaNotice {
+  margin-top:40px;
+  font-size:12px;
+  color:#555;
+  text-align:center;
+  line-height:1.5;
+}
+
+/* FOOTER */
+.footerLink {
+  margin-top:12px;
+  font-size:12px;
+  text-align:center;
+  color:#0066cc;
+  text-decoration:underline;
+  cursor:pointer;
+}
+#version {
+  margin-top:10px;
+  font-size:11px;
+  color:#888;
+  text-align:center;
+}
+
+/* POPUP */
+.overlay {
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+}
+.popup {
+  background:#fff;
+  padding:24px;
+  border-radius:16px;
+  text-align:center;
+  max-width:320px;
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<!-- LOGO -->
+<div id="logo">
+  <img src="Gospel-Logo.png" alt="Gospel Light Christian Church Logo">
+</div>
+
+<h1>VisitorPass</h1>
+<div id="dateTime"></div>
+
+<!-- MAIN -->
+<div id="main" class="section">
+  <button class="btn primary" onclick="openSignIn()">Sign‑In</button>
+  <button class="btn danger" onclick="openSignOut()">Sign‑Out</button>
+
+  <div id="pdpaNotice">
+    <strong>Personal Data Protection Notice (PDPA)</strong><br>
+    The personal data provided will be collected and used solely for
+    internal visitor registration, security, and record‑keeping purposes.
+    This information will not be disclosed to external parties and will be
+    retained only for as long as required to fulfil these purposes, in
+    accordance with applicable data protection laws.
+  </div>
+
+  <div class="footerLink" onclick="showAboutPopup()">
+    About VisitorPass Visitor Management System
+  </div>
+
+  <div class="footerLink" onclick="showAdminPopup()">
+    Admin Access
+  </div>
+
+  <div id="version">VisitorPass v1.0</div>
+</div>
+
+<!-- SIGN‑IN -->
+<div id="signIn" class="section" style="display:none;">
+  <div class="field"><input id="inName" placeholder="Name"></div>
+  <div class="field">
+    <input id="inHp" placeholder="Handphone No (8 digits)"
+           inputmode="numeric" maxlength="8"
+           oninput="sanitizeHp(this)">
+  </div>
+  <div class="field"><input id="inCompany" placeholder="Company"></div>
+  <div class="field"><input id="inPurpose" placeholder="Purpose"></div>
+
+  <div id="inError" class="error"></div>
+
+  <button class="btn primary" onclick="submitSignIn()">Confirm Sign‑In</button>
+  <button class="btn secondary" onclick="backToMain()">Back</button>
+</div>
+
+<!-- SIGN‑OUT -->
+<div id="signOut" class="section" style="display:none;">
+  <div id="signOutMsg"></div>
+  <div id="visitorList"></div>
+
+  <div class="field" id="hpBox" style="display:none;">
+    <input id="outHp" placeholder="Confirm Handphone No (8 digits)"
+           inputmode="numeric" maxlength="8"
+           oninput="sanitizeHp(this)">
+  </div>
+
+  <div id="outError" class="error"></div>
+
+  <button id="confirmOut" class="btn secondary" style="display:none;" onclick="submitSignOut()">
+    Confirm Sign‑Out
+  </button>
+
+  <button class="btn secondary" onclick="backToMain()">Back</button>
+</div>
+</div>
+
+<!-- POPUP -->
+<div id="popup" class="overlay">
+  <div class="popup">
+    <h2 id="popupTitle"></h2>
+    <p id="popupMsg"></p>
+    <button id="popupBtn" class="btn secondary"></button>
+  </div>
+</div>
+
+<script>
+const records = JSON.parse(localStorage.getItem("records") || "[]");
+let selectedIndex = null;
+
+/* DATE & TIME */
+function updateDateTime() {
+  const n = new Date();
+  dateTime.innerHTML =
+    n.toLocaleDateString(undefined,{weekday:"long",year:"numeric",month:"long",day:"numeric"})
+    + "<br>" + n.toLocaleTimeString();
+}
+updateDateTime(); setInterval(updateDateTime,1000);
+
+/* HP SANITIZATION */
+function sanitizeHp(input) {
+  input.value = input.value.replace(/[^0-9]/g, '').slice(0,8);
+}
+function isValidHp(hp) {
+  return /^\d{8}$/.test(hp);
+}
+
+/* NAV */
+function hideAll(){ main.style.display="none"; signIn.style.display="none"; signOut.style.display="none"; closePopup(); }
+function backToMain(){ hideAll(); main.style.display="block"; }
+
+/* SIGN‑IN */
+function openSignIn(){
+  hideAll();
+  inName.value=""; inHp.value=""; inCompany.value=""; inPurpose.value="";
+  inError.style.display="none";
+  signIn.style.display="block";
+}
+function submitSignIn(){
+  const name=inName.value.trim(), hp=inHp.value.trim(),
+        company=inCompany.value.trim(), purpose=inPurpose.value.trim();
+  inError.style.display="none";
+
+  if(!name||!hp||!company||!purpose){
+    inError.textContent="❌ Please fill in all fields.";
+    inError.style.display="block"; return;
+  }
+  if(!isValidHp(hp)){
+    inError.textContent="❌ Handphone number must be exactly 8 digits.";
+    inError.style.display="block"; return;
+  }
+
+  const conflict=records.find(r=>!r.outTime&&(r.name.toLowerCase()===name.toLowerCase()||r.hp===hp));
+  if(conflict){
+    showPopup("⚠️ Cannot Sign‑In",
+      "User hasn’t Sign‑Out yet.<br>Please Sign‑Out first.",
+      "Go to Sign‑Out",openSignOut); return;
+  }
+
+  records.push({ name,hp,company,purpose,inTime:new Date().toLocaleString(),outTime:"" });
+  localStorage.setItem("records",JSON.stringify(records));
+
+  showPopup("✅ Sign‑In Successful",`${name} signed in successfully.`,"Back to Main Page",backToMain);
+}
+
+/* SIGN‑OUT */
+function openSignOut(){ hideAll(); outHp.value=""; loadVisitors(); signOut.style.display="block"; }
+function loadVisitors(){
+  visitorList.innerHTML=""; signOutMsg.innerHTML="";
+  hpBox.style.display="none"; confirmOut.style.display="none"; outError.style.display="none";
+  const active=records.filter(r=>!r.outTime);
+  if(active.length===0){ signOutMsg.innerHTML="No Visitors."; return; }
+  signOutMsg.innerHTML="Select Visitors to Sign‑Out.";
+  active.forEach(r=>{
+    const idx=records.indexOf(r);
+    const b=document.createElement("button");
+    b.className="nameBtn"; b.textContent=r.name;
+    b.onclick=()=>{
+      document.querySelectorAll(".nameBtn").forEach(x=>x.style.display="none");
+      b.style.display="block"; b.classList.add("active");
+      selectedIndex=idx; hpBox.style.display="block"; confirmOut.style.display="block";
+    };
+    visitorList.appendChild(b);
+  });
+}
+function submitSignOut(){
+  const r=records[selectedIndex], hp=outHp.value.trim();
+  if(!isValidHp(hp)){
+    outError.textContent="❌ Handphone number must be exactly 8 digits.";
+    outError.style.display="block"; return;
+  }
+  if(hp!==r.hp){
+    outError.textContent="❌ Handphone not matched.";
+    outError.style.display="block"; return;
+  }
+  r.outTime=new Date().toLocaleString();
+  localStorage.setItem("records",JSON.stringify(records));
+  showPopup("✅ Sign‑Out Successful",`${r.name} has signed out.`,"Back to Main Page",backToMain);
+}
+
+/* POPUPS */
+function showPopup(t,m,b,cb){ popupTitle.innerHTML=t; popupMsg.innerHTML=m; popupBtn.textContent=b; popupBtn.onclick=cb; popup.style.display="flex"; }
+function closePopup(){ popup.style.display="none"; }
+
+/* ABOUT / ADMIN */
+function showAboutPopup(){
+  showPopup("About VisitorPass",
+    "This application was developed and a property of Gospel Light Christian Church. " +
+    "It is intended for internal use only and not for external distribution or for sale.<br><br>" +
+    "For any inquiries, please contact us at Hp 91784990 or email us at infra@gospellight.sg.",
+    "Close",closePopup);
+}
+function showAdminPopup(){
+  showPopup("Admin Access","Admin functions will be enabled in a later version.","Close",closePopup);
+}
+</script>
+</body>
+</html>
+``
