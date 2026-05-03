@@ -187,3 +187,114 @@ let records = JSON.parse(localStorage.getItem("records") || "[]");
 let companies = JSON.parse(localStorage.getItem("companies") || '["Gospel Light Christian Church"]');
 let selectedIndex = null;
 
+/* ===== CLOCK ===== */
+function updateTime(){
+  const d = new Date();
+  dateLine.textContent = d.toLocaleDateString(undefined,{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+  timeLine.textContent = d.toLocaleTimeString();
+}
+setInterval(updateTime,1000); updateTime();
+
+/* ===== UTIL ===== */
+function sanitizeHp(i){ i.value=i.value.replace(/\D/g,'').slice(0,8); }
+function isValidHp(h){ return /^\d{8}$/.test(h); }
+
+/* ===== NAV ===== */
+function show(id){
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+function openSignIn(){
+  inName.value=inHp.value=inPurpose.value=newCompany.value="";
+  inError.style.display="none";
+  loadCompanies();
+  show("signIn");
+}
+function openSignOut(){
+  loadVisitors();
+  show("signOut");
+}
+function goMain(){ show("main"); }
+
+/* ===== COMPANY ===== */
+function loadCompanies(){
+  inCompany.innerHTML = '<option value="">Select Company</option>';
+  companies.forEach(c=>{
+    const o=document.createElement("option");
+    o.value=o.textContent=c;
+    inCompany.appendChild(o);
+  });
+  const add=document.createElement("option");
+  add.value="__NEW__"; add.textContent="+ Add new company";
+  inCompany.appendChild(add);
+}
+function companyChanged(){
+  newCompanyBox.style.display = inCompany.value==="__NEW__" ? "block" : "none";
+}
+
+/* ===== SIGN IN ===== */
+function submitSignIn(){
+  let name=inName.value.trim(), hp=inHp.value.trim(), company=inCompany.value, purpose=inPurpose.value.trim();
+  if(company==="__NEW__"){
+    company=newCompany.value.trim();
+    if(!company){ inError.textContent="❌ Enter company name."; inError.style.display="block"; return; }
+    companies.push(company);
+    localStorage.setItem("companies",JSON.stringify(companies));
+  }
+  if(!name||!hp||!company||!purpose){ inError.textContent="❌ Fill all fields."; inError.style.display="block"; return; }
+  if(!isValidHp(hp)){ inError.textContent="❌ HP must be 8 digits."; inError.style.display="block"; return; }
+  if(records.find(r=>!r.outTime&&(r.name===name||r.hp===hp))){
+    showPopup("⚠️ Already Signed‑In","Please sign‑out first."); return;
+  }
+  records.push({name,hp,company,purpose,inTime:new Date().toLocaleString(),outTime:""});
+  localStorage.setItem("records",JSON.stringify(records));
+  showPopup("✅ Sign‑In Successful",name+" signed in successfully.");
+}
+
+/* ===== SIGN OUT ===== */
+function loadVisitors(){
+  visitorList.innerHTML=""; hpBox.style.display="none"; selectedIndex=null;
+  const active=records.filter(r=>!r.outTime);
+  if(active.length===0){ signOutMsg.textContent="No Visitors."; return; }
+  signOutMsg.textContent="Select Visitor to Sign‑Out";
+  active.forEach(r=>{
+    const idx=records.indexOf(r);
+    const b=document.createElement("button");
+    b.className="nameBtn"; b.textContent=r.name;
+    b.onclick=()=>{
+      document.querySelectorAll(".nameBtn").forEach(x=>x.classList.remove("active"));
+      b.classList.add("active");
+      selectedIndex=idx;
+      hpBox.style.display="block";
+      outHp.value="";
+    };
+    visitorList.appendChild(b);
+  });
+}
+function confirmSignOut(){
+  const r=records[selectedIndex];
+  if(outHp.value!==r.hp){
+    showPopup("❌ Error","Key in correct Handphone number");
+    return;
+  }
+  r.outTime=new Date().toLocaleString();
+  localStorage.setItem("records",JSON.stringify(records));
+  showPopup("✅ Sign‑Out Successful",r.name+" has signed out.");
+}
+
+/* ===== POPUPS ===== */
+function showPopup(t,m){ popupTitle.textContent=t; popupMsg.textContent=m; popup.style.display="flex"; }
+function closePopup(){ popup.style.display="none"; goMain(); }
+
+/* ===== ABOUT ===== */
+function showAbout(){
+  showPopup("About VisitorPass",
+    "This application was developed and is a property of Gospel Light Christian Church.\n\n"+
+    "It is intended for internal use only and not for external distribution or sale.\n\n"+
+    "For inquiries, please contact Hp 9178 4990 or email infra@gospellight.sg."
+  );
+}
+</script>
+
+</body>
+</html>
