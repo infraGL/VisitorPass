@@ -23,8 +23,6 @@ body {
   padding:20px;
   border-radius:16px;
   box-shadow:0 10px 25px rgba(0,0,0,.12);
-  display:flex;
-  flex-direction:column;
 }
 
 /* LOGO */
@@ -63,22 +61,8 @@ input, select {
 .danger { background:#ef4444; color:#fff; }
 .secondary { background:#3b82f6; color:#fff; }
 
-/* ERRORS */
+/* ERROR */
 .error { color:#dc2626; font-weight:600; display:none; }
-
-/* VISITOR LIST */
-.nameBtn {
-  width:100%;
-  text-align:left;
-  padding:12px;
-  border:none;
-  border-radius:12px;
-  margin-bottom:10px;
-  font-weight:600;
-  cursor:pointer;
-  background:#e5e7eb;
-}
-.nameBtn.active { background:#3b82f6; color:#fff; }
 
 /* POPUP */
 .overlay {
@@ -103,7 +87,7 @@ input, select {
 <div class="app">
 
 <div id="logo">
-  <img src="Gospel-Logo.png" alt="Gospel Light Christian Church Logo">
+  <img src="Gospel-Logo.png" alt="Logo">
 </div>
 
 <h1>VisitorPass</h1>
@@ -142,6 +126,7 @@ input, select {
   <div class="field">
     <select id="inCompany" onchange="companyChanged()"></select>
   </div>
+
   <div class="field" id="newCompanyBox" style="display:none;">
     <input id="newCompany" placeholder="Enter new company name">
   </div>
@@ -155,16 +140,16 @@ input, select {
 
 <!-- SIGN OUT -->
 <div id="signOut" class="section">
-  <div id="signOutMsg" style="text-align:center;font-weight:600;margin-bottom:12px;">
-    Select Visitor to Sign‑Out
-  </div>
-  <div id="visitorList"></div>
-
-  <div id="hpBox" style="display:none;">
-    <input id="outHp" placeholder="Confirm Handphone (8 digits)" maxlength="8" oninput="sanitizeHp(this)">
-    <button class="btn secondary" onclick="confirmSignOut()">Confirm</button>
+  <div class="field">
+    <input id="outHp" placeholder="Enter Handphone (8 digits)" maxlength="8" oninput="sanitizeHp(this)">
   </div>
 
+  <div id="foundInfo" style="display:none;text-align:center;margin-bottom:12px;">
+    <div><strong id="foundName"></strong></div>
+    <div id="foundCompany"></div>
+  </div>
+
+  <button id="doSignOut" class="btn danger" style="display:none;" onclick="confirmSignOut()">Sign‑Out</button>
   <button class="btn secondary" onclick="goMain()">Back</button>
 </div>
 
@@ -178,12 +163,12 @@ input, select {
 </div>
 
 <script>
-/* ===== DATA ===== */
+/* DATA */
 let records = JSON.parse(localStorage.getItem("records") || "[]");
 let companies = JSON.parse(localStorage.getItem("companies") || '["Gospel Light Christian Church"]');
-let selectedIndex = null;
+let foundRecord = null;
 
-/* ===== CLOCK ===== */
+/* CLOCK */
 function updateTime(){
   const d = new Date();
   dateLine.textContent =
@@ -192,30 +177,27 @@ function updateTime(){
 }
 setInterval(updateTime,1000); updateTime();
 
-/* ===== UTIL ===== */
+/* UTIL */
 function sanitizeHp(i){ i.value=i.value.replace(/\D/g,'').slice(0,8); }
 function isValidHp(h){ return /^\d{8}$/.test(h); }
 
-/* ===== NAV ===== */
+/* NAV */
 function show(id){
   document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
 }
+function goMain(){ show("main"); }
+
+/* SIGN IN */
 function openSignIn(){
   inName.value=inHp.value=inPurpose.value=newCompany.value="";
   inError.style.display="none";
   loadCompanies();
   show("signIn");
 }
-function openSignOut(){
-  loadVisitors();
-  show("signOut");
-}
-function goMain(){ show("main"); }
 
-/* ===== COMPANY ===== */
 function loadCompanies(){
-  inCompany.innerHTML = '<option value="">Select Company</option>';
+  inCompany.innerHTML='<option value="">Select Company</option>';
   companies.forEach(c=>{
     const o=document.createElement("option");
     o.value=o.textContent=c;
@@ -225,61 +207,69 @@ function loadCompanies(){
   add.value="__NEW__"; add.textContent="+ Add new company";
   inCompany.appendChild(add);
 }
+
 function companyChanged(){
   newCompanyBox.style.display = inCompany.value==="__NEW__" ? "block" : "none";
 }
 
-/* ===== SIGN IN ===== */
 function submitSignIn(){
-  let name=inName.value.trim(), hp=inHp.value.trim(), company=inCompany.value, purpose=inPurpose.value.trim();
+  let name=inName.value.trim(),
+      hp=inHp.value.trim(),
+      company=inCompany.value,
+      purpose=inPurpose.value.trim();
+
   if(company==="__NEW__"){
     company=newCompany.value.trim();
     if(!company){ inError.textContent="❌ Enter company name."; inError.style.display="block"; return; }
     companies.push(company);
     localStorage.setItem("companies",JSON.stringify(companies));
   }
-  if(!name||!hp||!company||!purpose){ inError.textContent="❌ Fill all fields."; inError.style.display="block"; return; }
-  if(!isValidHp(hp)){ inError.textContent="❌ HP must be 8 digits."; inError.style.display="block"; return; }
+
+  if(!name||!hp||!company||!purpose){
+    inError.textContent="❌ Fill all fields."; inError.style.display="block"; return;
+  }
+  if(!isValidHp(hp)){
+    inError.textContent="❌ Handphone must be 8 digits."; inError.style.display="block"; return;
+  }
   if(records.find(r=>!r.outTime&&(r.name===name||r.hp===hp))){
     showPopup("⚠️ Already Signed‑In","Please sign‑out first."); return;
   }
+
   records.push({name,hp,company,purpose,inTime:new Date().toLocaleString(),outTime:""});
   localStorage.setItem("records",JSON.stringify(records));
   showPopup("✅ Sign‑In Successful",name+" signed in successfully.");
 }
 
-/* ===== SIGN OUT ===== */
-function loadVisitors(){
-  visitorList.innerHTML=""; hpBox.style.display="none"; selectedIndex=null;
-  const active=records.filter(r=>!r.outTime);
-  if(active.length===0){ signOutMsg.textContent="No Visitors."; return; }
-  signOutMsg.textContent="Select Visitor to Sign‑Out";
-  active.forEach(r=>{
-    const idx=records.indexOf(r);
-    const b=document.createElement("button");
-    b.className="nameBtn"; b.textContent=r.name;
-    b.onclick=()=>{
-      document.querySelectorAll(".nameBtn").forEach(x=>x.classList.remove("active"));
-      b.classList.add("active");
-      selectedIndex=idx;
-      hpBox.style.display="block";
-      outHp.value="";
-    };
-    visitorList.appendChild(b);
-  });
-}
-function confirmSignOut(){
-  const r=records[selectedIndex];
-  if(outHp.value!==r.hp){
-    showPopup("❌ Error","Key in correct Handphone number");
-    return;
-  }
-  r.outTime=new Date().toLocaleString();
-  localStorage.setItem("records",JSON.stringify(records));
-  showPopup("✅ Sign‑Out Successful",r.name+" has signed out.");
+/* SIGN OUT */
+function openSignOut(){
+  outHp.value="";
+  foundInfo.style.display="none";
+  doSignOut.style.display="none";
+  foundRecord=null;
+  show("signOut");
 }
 
-/* ===== POPUPS ===== */
+outHp.addEventListener("input",()=>{
+  if(!isValidHp(outHp.value)) return;
+  const r = records.find(x=>!x.outTime && x.hp===outHp.value);
+  if(!r) return;
+  foundRecord=r;
+  foundName.textContent=r.name;
+  foundCompany.textContent=r.company;
+  foundInfo.style.display="block";
+  doSignOut.style.display="block";
+});
+
+function confirmSignOut(){
+  if(!foundRecord){
+    showPopup("❌ Error","Key in correct Handphone number"); return;
+  }
+  foundRecord.outTime=new Date().toLocaleString();
+  localStorage.setItem("records",JSON.stringify(records));
+  showPopup("✅ Sign‑Out Successful",foundRecord.name+" has signed out.");
+}
+
+/* POPUP */
 function showPopup(t,m){
   popupTitle.textContent=t;
   popupMsg.textContent=m;
@@ -287,7 +277,7 @@ function showPopup(t,m){
 }
 function closePopup(){ popup.style.display="none"; goMain(); }
 
-/* ===== ABOUT ===== */
+/* ABOUT */
 function showAbout(){
   showPopup(
     "About VisitorPass",
