@@ -1,8 +1,13 @@
 <!DOCTYPE html>
 <!--
 VisitorPass index.html
-Version: 1.1.0
+Version: 1.1.2
 Last updated: 2026-05-02
+Fixes:
+- Restored Sign-In date/day/time payload
+- Fixed Sign-Out page refresh/state reset
+- Restored full PDPA text
+- Preserved Flow A & Flow B compatibility
 -->
 <html lang="en">
 <head>
@@ -100,8 +105,11 @@ input,select{
 
   <div class="pdpa">
     <strong>Personal Data Protection Notice</strong><br>
-    Personal data collected is used solely for visitor registration,
-    safety, and security purposes in accordance with PDPA.
+    The personal data provided will be collected and used solely for internal
+    visitor registration, security, and record‑keeping purposes.
+    This information will not be disclosed to external parties and will be
+    retained only for as long as required to fulfil these purposes,
+    in accordance with applicable data protection laws.
   </div>
 
   <div class="small-link" onclick="showAbout()">About VisitorPass</div>
@@ -120,7 +128,6 @@ input,select{
     <input id="newCompany" placeholder="New company">
   </div>
   <div class="field"><input id="inPurpose" placeholder="Purpose"></div>
-
   <button class="btn primary" onclick="submitSignIn()">Confirm Sign‑In</button>
   <button class="btn secondary" onclick="goMain()">Back</button>
 </div>
@@ -139,7 +146,8 @@ input,select{
     <div id="foundCompany"></div>
   </div>
 
-  <button id="doSignOut" class="btn danger" style="display:none;" onclick="confirmSignOut()">Sign‑Out</button>
+  <button id="doSignOut" class="btn danger" style="display:none;"
+          onclick="confirmSignOut()">Sign‑Out</button>
   <button class="btn secondary" onclick="goMain()">Back</button>
 </div>
 
@@ -161,8 +169,8 @@ const FLOW_B_URL =
 "https://6adc8542497ee52f9948699f4ec423.8e.environment.api.powerplatform.com/powerautomate/automations/direct/workflows/122e6e10f233498ea9bd8100e8f89a2c/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=QZzP2YY5yl7EOysVMcNgPaRdk4P2tKmtzNk7LV4Zx6Q";
 
 /* ===== STATE ===== */
-let records = JSON.parse(localStorage.getItem("records") || "[]");
-let companies = JSON.parse(localStorage.getItem("companies") || '["Gospel Light Christian Church"]');
+let records = JSON.parse(localStorage.getItem("records")||"[]");
+let companies = JSON.parse(localStorage.getItem("companies")||'["Gospel Light Christian Church"]');
 let foundRecord=null;
 
 /* ===== CLOCK ===== */
@@ -216,11 +224,15 @@ function companyChanged(){
   newCompanyBox.style.display=(inCompany.value==="__NEW__")?"block":"none";
 }
 function submitSignIn(){
+  const now=new Date();
   const record={
     name:inName.value.trim(),
     hp:inHp.value.trim(),
     company:(inCompany.value==="__NEW__"?newCompany.value.trim():inCompany.value),
     purpose:inPurpose.value.trim(),
+    date: now.toLocaleDateString(),
+    day: now.toLocaleDateString(undefined,{weekday:"long"}),
+    timeIn: now.toLocaleTimeString(),
     dateKey:todayKey(),
     outTime:""
   };
@@ -269,12 +281,16 @@ function confirmSignOut(){
   fetch(FLOW_B_URL,{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({hp:foundRecord.hp,signOutDate, timeOut:signOutTime})
+    body:JSON.stringify({hp:foundRecord.hp,signOutDate,timeOut:signOutTime})
   }).catch(()=>{});
-  showPopup("Signed Out",`Goodbye ${foundRecord.name}`);
+  foundRecord=null;
+  foundInfo.style.display="none";
+  doSignOut.style.display="none";
+  goMain();
 }
 </script>
 
 </div>
 </body>
 </html>
+``
