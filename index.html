@@ -6,38 +6,40 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-*{box-sizing:border-box}
-body{
-  font-family:system-ui,Arial,sans-serif;
-  background:#f3f4f6;
-  padding:20px;
-  display:flex;
-  justify-content:center;
-}
-.app{
-  background:#fff;
-  max-width:420px;
-  width:100%;
-  padding:20px;
-  border-radius:16px;
-  box-shadow:0 10px 25px rgba(0,0,0,.12);
+* { box-sizing: border-box; }
+
+body {
+  font-family: system-ui, Arial, sans-serif;
+  background: #f3f4f6;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
 }
 
-/* LOGO */
-#logo{text-align:center;margin-bottom:10px}
-#logo img{max-width:200px;width:100%}
+.app {
+  background: #fff;
+  max-width: 420px;
+  width: 100%;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,.12);
+}
 
 /* HEADER */
-h1{text-align:center;margin-bottom:6px}
-#dateLine{text-align:center;font-weight:600}
-#timeLine{text-align:center;font-size:18px;margin-bottom:18px}
+#logo { text-align:center; margin-bottom:10px; }
+#logo img { max-width:200px; width:100%; }
+
+h1 { text-align:center; margin-bottom:6px; }
+#dateLine { text-align:center; font-weight:600; }
+#timeLine { text-align:center; font-size:18px; margin-bottom:18px; }
 
 /* SECTIONS */
-.section{display:none}
-.section.active{display:block}
-.field{margin-bottom:12px}
+.section { display:none; }
+.section.active { display:block; }
 
-input,select{
+.field { margin-bottom:12px; }
+
+input, select {
   width:100%;
   padding:12px;
   border-radius:10px;
@@ -45,7 +47,7 @@ input,select{
 }
 
 /* BUTTONS */
-.btn{
+.btn {
   width:70%;
   margin:0 auto 12px;
   display:block;
@@ -55,19 +57,19 @@ input,select{
   font-weight:600;
   cursor:pointer;
 }
-.primary{background:#22c55e;color:#fff}
-.danger{background:#ef4444;color:#fff}
-.secondary{background:#3b82f6;color:#fff}
+.primary { background:#22c55e; color:#fff; }
+.danger { background:#ef4444; color:#fff; }
+.secondary { background:#3b82f6; color:#fff; }
 
-/* COUNTER */
-.counter{
+/* COUNTERS */
+.counter {
   text-align:center;
   font-weight:600;
   margin-bottom:6px;
 }
 
 /* POPUP */
-.overlay{
+.overlay {
   position:fixed;
   inset:0;
   background:rgba(0,0,0,.5);
@@ -75,7 +77,7 @@ input,select{
   align-items:center;
   justify-content:center;
 }
-.popup{
+.popup {
   background:#fff;
   padding:24px;
   border-radius:16px;
@@ -89,7 +91,7 @@ input,select{
 <div class="app">
 
 <div id="logo">
-  <img src="Gospel-Logo.png" alt="Gospel Light Christian Church">
+  <img src="Gospel-Logo.png" alt="Gospel Light">
 </div>
 
 <h1>VisitorPass</h1>
@@ -103,11 +105,8 @@ input,select{
 
   <div style="margin-top:40px;font-size:12px;text-align:center;color:#555;line-height:1.5;">
     <strong>Personal Data Protection Notice (PDPA)</strong><br>
-    The personal data provided will be collected and used solely for internal
-    visitor registration, security, and record‑keeping purposes.
-    This information will not be disclosed to external parties and will be
-    retained only for as long as required to fulfil these purposes,
-    in accordance with applicable data protection laws.
+    Personal data is collected solely for visitor registration and security
+    purposes and will be retained only as required by law.
   </div>
 
   <div style="margin-top:20px;font-size:12px;text-align:center;color:#0066cc;text-decoration:underline;cursor:pointer"
@@ -172,64 +171,66 @@ input,select{
 </div>
 
 <script>
-/* ================= FLOW URLS ================= */
+/* ================= FLOW URLS (RAW, CORRECT) ================= */
 const FLOW_A_URL =
 "https://6adc8542497ee52f9948699f4ec423.8e.environment.api.powerplatform.com/powerautomate/automations/direct/workflows/244ce5b70b2648dc8a28a6cc5170d121/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=vmFXCNCQkZKVOP1-yIyb4r4rtFIo2iZlxy3Q6gg__IY";
 
 const FLOW_C_URL =
-"https://6adc8542497ee52f9948699f4ec423.8e.environment.api.powerplatform.com/powerautomate/automations/direct/workflows/4fecea6e48c44688beb736a94fabbdaa/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=BnEzWN-Xd_TrPPmFt83GYa7VUcg_BhQAjgSgtL7AdXo";
+"https://6adc8542497ee52f9948699f4ec423.8e.environment.api.powerplatform.com/powerautomate/automations/direct/workflows/122e6e10f233498ea9bd8100e8f89a2c/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=QZzP2YY5yl7EOysVMcNgPaRdk4P2tKmtzNk7LV4Zx6Q";
 
 /* ================= DATA ================= */
-let records = JSON.parse(localStorage.getItem("records")||"[]");
-let companies = JSON.parse(localStorage.getItem("companies")||'["Gospel Light Christian Church"]');
-let foundRecord=null;
+let records = JSON.parse(localStorage.getItem("records") || "[]");
+let companies = JSON.parse(localStorage.getItem("companies") || '["Gospel Light Christian Church"]');
+let foundRecord = null;
 
-/* ================= DATE ================= */
-function todayKey(){
-  return new Date().toISOString().slice(0,10);
+/* ================= DATE / TIME ================= */
+function todayKey() {
+  return new Date().toISOString().slice(0, 10);
 }
 
-/* ================= CLOCK ================= */
-function updateTime(){
-  const d=new Date();
-  dateLine.textContent=d.toLocaleDateString(undefined,{weekday:"long",year:"numeric",month:"long",day:"numeric"});
-  timeLine.textContent=d.toLocaleTimeString();
+function updateTime() {
+  const d = new Date();
+  dateLine.textContent =
+    d.toLocaleDateString(undefined, { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+  timeLine.textContent = d.toLocaleTimeString();
 }
-setInterval(updateTime,1000);updateTime();
+setInterval(updateTime, 1000);
+updateTime();
 
 /* ================= UTIL ================= */
-function sanitizeHp(i){i.value=i.value.replace(/\D/g,'').slice(0,8)}
-function isValidHp(h){return /^\d{8}$/.test(h)}
+function sanitizeHp(i){ i.value = i.value.replace(/\D/g,'').slice(0,8); }
+function isValidHp(h){ return /^\d{8}$/.test(h); }
 
 /* ================= NAV ================= */
 function show(id){
-  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+  document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
 }
-function goMain(){show("main")}
+function goMain(){ show("main"); }
 
 /* ================= SIGN IN ================= */
 function openSignIn(){
-  inName.value=inHp.value=inPurpose.value=newCompany.value="";
-  newCompanyBox.style.display="none";
+  inName.value = inHp.value = inPurpose.value = newCompany.value = "";
+  newCompanyBox.style.display = "none";
   loadCompanies();
   show("signIn");
 }
 
 function loadCompanies(){
-  inCompany.innerHTML='<option value="">Select Company</option>';
+  inCompany.innerHTML = '<option value="">Select Company</option>';
   companies.forEach(c=>{
-    const o=document.createElement("option");
-    o.value=o.textContent=c;
+    const o = document.createElement("option");
+    o.value = o.textContent = c;
     inCompany.appendChild(o);
   });
-  const add=document.createElement("option");
-  add.value="__NEW__";add.textContent="+ Add new company";
+  const add = document.createElement("option");
+  add.value="__NEW__";
+  add.textContent="+ Add new company";
   inCompany.appendChild(add);
 }
 
 function companyChanged(){
-  newCompanyBox.style.display = inCompany.value==="__NEW__" ? "block" : "none";
+  newCompanyBox.style.display = (inCompany.value==="__NEW__") ? "block" : "none";
 }
 
 function submitSignIn(){
@@ -240,24 +241,16 @@ function submitSignIn(){
 
   if(company==="__NEW__"){
     company=newCompany.value.trim();
-    if(!company){showPopup("Error","Enter company name");return}
     companies.push(company);
     localStorage.setItem("companies",JSON.stringify(companies));
   }
 
-  if(!name||!hp||!company||!purpose){showPopup("Error","Fill all fields");return}
-  if(!isValidHp(hp)){showPopup("Error","Handphone must be 8 digits");return}
-
-  if(records.find(r=>!r.outTime&&(r.name===name||r.hp===hp))){
-    showPopup("Already Signed‑In","Please sign‑out first");return
+  if(!name||!hp||!company||!purpose||!isValidHp(hp)){
+    showPopup("Error","Please complete all fields correctly");
+    return;
   }
 
-  records.push({
-    name,hp,company,purpose,
-    inTime:new Date().toLocaleString(),
-    dateKey:todayKey(),
-    outTime:""
-  });
+  records.push({ name,hp,company,purpose,dateKey:todayKey(),outTime:"" });
   localStorage.setItem("records",JSON.stringify(records));
 
   fetch(FLOW_A_URL,{
@@ -267,14 +260,11 @@ function submitSignIn(){
       date:new Date().toLocaleDateString(),
       day:new Date().toLocaleDateString(undefined,{weekday:"long"}),
       timeIn:new Date().toLocaleTimeString(),
-      name:name,
-      hp:hp,
-      company:company,
-      purpose:purpose
+      name, hp, company, purpose
     })
   }).catch(()=>{});
 
-  showPopup("✅ Sign‑In Successful",name+" signed in successfully");
+  showPopup("Success","Signed in successfully");
 }
 
 /* ================= SIGN OUT ================= */
@@ -284,17 +274,16 @@ function openSignOut(){
   doSignOut.style.display="none";
   foundRecord=null;
 
-  const today=todayKey();
-  totalToday.textContent="Total visitors today: "+records.filter(r=>r.dateKey===today).length;
-  stillInside.textContent="Visitors still inside: "+records.filter(r=>r.outTime==="").length;
+  totalToday.textContent="Total visitors today: "+records.filter(r=>r.dateKey===todayKey()).length;
+  stillInside.textContent="Visitors still inside: "+records.filter(r=>!r.outTime).length;
 
   show("signOut");
 }
 
 outHp.addEventListener("input",()=>{
-  if(!isValidHp(outHp.value))return;
-  const r=records.find(x=>x.outTime===""&&x.hp===outHp.value);
-  if(!r)return;
+  if(!isValidHp(outHp.value)) return;
+  const r=records.find(x=>!x.outTime && x.hp===outHp.value);
+  if(!r) return;
   foundRecord=r;
   foundName.textContent=r.name;
   foundCompany.textContent=r.company;
@@ -303,7 +292,7 @@ outHp.addEventListener("input",()=>{
 });
 
 function confirmSignOut(){
-  if(!foundRecord){showPopup("Error","Key in correct Handphone number");return}
+  if(!foundRecord) return;
 
   foundRecord.outTime=new Date().toLocaleString();
   localStorage.setItem("records",JSON.stringify(records));
@@ -317,7 +306,7 @@ function confirmSignOut(){
     })
   }).catch(()=>{});
 
-  showPopup("✅ Sign‑Out Successful",foundRecord.name+" has signed out");
+  showPopup("Success","Signed out successfully");
 }
 
 /* ================= POPUP ================= */
@@ -326,18 +315,17 @@ function showPopup(t,m){
   popupMsg.textContent=m;
   popup.style.display="flex";
 }
-function closePopup(){popup.style.display="none";goMain()}
+function closePopup(){ popup.style.display="none"; goMain(); }
 
 /* ================= ABOUT ================= */
 function showAbout(){
   showPopup(
     "About VisitorPass",
-    "This application was developed and is a property of Gospel Light Christian Church.\n\n"+
-    "It is intended for internal use only and not for external distribution or sale.\n\n"+
-    "For inquiries, please contact Hp 9178 4990 or email infra@gospellight.sg."
+    "Developed for Gospel Light Christian Church.\nInternal use only."
   );
 }
 </script>
 
+</div>
 </body>
 </html>
