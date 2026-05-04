@@ -294,7 +294,7 @@ outHp.addEventListener("input",()=>{
 function confirmSignOut(){
   if(!foundRecord) return;
 
-  foundRecord.outTime=new Date().toLocaleString();
+  foundRecord.outTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   localStorage.setItem("records",JSON.stringify(records));
 
   fetch(FLOW_C_URL,{
