@@ -48,6 +48,21 @@ input,select{
 .danger{background:#ef4444;color:#fff}
 .secondary{background:#3b82f6;color:#fff}
 .counter{text-align:center;font-weight:600;margin-bottom:6px}
+.small-link{
+  text-align:center;
+  font-size:12px;
+  color:#0066cc;
+  text-decoration:underline;
+  cursor:pointer;
+  margin-top:10px;
+}
+.pdpa{
+  font-size:11px;
+  color:#555;
+  line-height:1.5;
+  margin-top:20px;
+  text-align:center;
+}
 .overlay{
   position:fixed;
   inset:0;
@@ -61,6 +76,7 @@ input,select{
   padding:24px;
   border-radius:16px;
   text-align:center;
+  max-width:320px;
 }
 </style>
 </head>
@@ -76,13 +92,27 @@ input,select{
 <div id="main" class="section active">
   <button class="btn primary" onclick="openSignIn()">Sign‑In</button>
   <button class="btn danger" onclick="openSignOut()">Sign‑Out</button>
+
+  <!-- PDPA -->
+  <div class="pdpa">
+    <strong>Personal Data Protection Notice</strong><br>
+    The personal data collected will be used solely for visitor registration,
+    safety, and security purposes. Data will be retained only as long as
+    necessary in accordance with applicable data protection laws.
+  </div>
+
+  <!-- ABOUT LINK -->
+  <div class="small-link" onclick="showAbout()">
+    About VisitorPass
+  </div>
 </div>
 
 <!-- SIGN IN -->
 <div id="signIn" class="section">
   <div class="field"><input id="inName" placeholder="Name"></div>
   <div class="field">
-    <input id="inHp" placeholder="Handphone (8 digits)" maxlength="8" oninput="sanitizeHp(this)">
+    <input id="inHp" placeholder="Handphone (8 digits)" maxlength="8"
+           oninput="sanitizeHp(this)">
   </div>
 
   <div class="field">
@@ -105,7 +135,8 @@ input,select{
   <div class="counter" id="stillInside"></div>
 
   <div class="field">
-    <input id="outHp" placeholder="Enter Handphone" maxlength="8" oninput="sanitizeHp(this)">
+    <input id="outHp" placeholder="Enter Handphone" maxlength="8"
+           oninput="sanitizeHp(this)">
   </div>
 
   <div id="foundInfo" style="display:none;text-align:center;margin-bottom:12px;">
@@ -113,9 +144,8 @@ input,select{
     <div id="foundCompany"></div>
   </div>
 
-  <button id="doSignOut" class="btn danger" style="display:none;" onclick="confirmSignOut()">
-    Sign‑Out
-  </button>
+  <button id="doSignOut" class="btn danger" style="display:none;"
+          onclick="confirmSignOut()">Sign‑Out</button>
   <button class="btn secondary" onclick="goMain()">Back</button>
 </div>
 
@@ -129,11 +159,11 @@ input,select{
 </div>
 
 <script>
-/* ================= FLOW URLs ================= */
-const FLOW_A_URL = "YOUR_FLOW_A_URL"; // VisitorPass – Time In
-const FLOW_B_URL = "YOUR_FLOW_B_URL"; // VisitorPass – Sign Out
+/* ====== FLOW URLS ====== */
+const FLOW_A_URL = "YOUR_FLOW_A_URL";
+const FLOW_B_URL = "YOUR_FLOW_B_URL";
 
-/* ================= STATE ================= */
+/* ====== STATE ====== */
 let records = JSON.parse(localStorage.getItem("records") || "[]");
 let companies = JSON.parse(
   localStorage.getItem("companies") ||
@@ -141,7 +171,7 @@ let companies = JSON.parse(
 );
 let foundRecord = null;
 
-/* ================= CLOCK ================= */
+/* ====== CLOCK ====== */
 function todayKey(){return new Date().toISOString().slice(0,10);}
 function updateClock(){
   const d=new Date();
@@ -150,7 +180,7 @@ function updateClock(){
 }
 setInterval(updateClock,1000);updateClock();
 
-/* ================= HELPERS ================= */
+/* ====== UTIL ====== */
 function sanitizeHp(i){i.value=i.value.replace(/\D/g,'').slice(0,8);}
 function show(id){
   document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
@@ -164,7 +194,14 @@ function showPopup(t,m){
 }
 function closePopup(){popup.style.display="none";}
 
-/* ================= SIGN IN ================= */
+function showAbout(){
+  showPopup(
+    "About VisitorPass",
+    "VisitorPass is an internal visitor management system developed for\nGospel Light Christian Church.\n\nThis system is for internal use only."
+  );
+}
+
+/* ====== SIGN IN ====== */
 function openSignIn(){
   inName.value=inHp.value=inPurpose.value=newCompany.value="";
   newCompanyBox.style.display="none";
@@ -215,7 +252,7 @@ function submitSignIn(){
   showPopup("Signed In",`Welcome ${record.name}`);
 }
 
-/* ================= SIGN OUT ================= */
+/* ====== SIGN OUT ====== */
 function openSignOut(){
   outHp.value="";
   foundInfo.style.display="none";
@@ -235,8 +272,8 @@ outHp.addEventListener("input",()=>{
 
   if(!active && any){
     showPopup(
-      "Already Signed Out",
-      "This visitor has already signed out.\nPlease contact admin if incorrect."
+      "Visitor has signed out!",
+      "If this is incorrect, please contact the admin."
     );
     return;
   }
@@ -272,6 +309,7 @@ function confirmSignOut(){
   showPopup("Signed Out",`Goodbye ${foundRecord.name}`);
 }
 </script>
+
 </div>
 </body>
 </html>
