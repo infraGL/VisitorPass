@@ -1,14 +1,12 @@
 <!DOCTYPE html>
 <!--
 VisitorPass index.html
-Version: 1.1.4 (RESTORED FULL FUNCTIONALITY)
+Version: 1.1.5 (LOGO RESTORED)
 Last updated: 2026-05-02
 Change summary:
-- Restored missing utility functions from v1.1.2
-- Restored full sign-in validation and cleanup
-- Kept duplicate sign-in prevention
-- Kept correct Flow A & B payloads
-- Preserved PDPA, About, and UI logic
+- Restored Gospel-Logo.png branding header
+- No logic changes from v1.1.4
+- Flow A & Flow B untouched
 -->
 <html lang="en">
 <head>
@@ -33,6 +31,8 @@ body{
   border-radius:16px;
   box-shadow:0 10px 25px rgba(0,0,0,.12);
 }
+#logo{text-align:center;margin-bottom:10px}
+#logo img{max-width:220px;width:100%}
 h1{text-align:center;margin-bottom:6px}
 #dateLine{text-align:center;font-weight:600}
 #timeLine{text-align:center;font-size:18px;margin-bottom:18px}
@@ -95,6 +95,10 @@ input,select{
 <body>
 <div class="app">
 
+<div id="logo">
+  Gospel-Logo.png
+</div>
+
 <h1>VisitorPass</h1>
 <div id="dateLine"></div>
 <div id="timeLine"></div>
@@ -156,32 +160,30 @@ input,select{
 const FLOW_A_URL = "https://6adc8542497ee52f9948699f4ec423.8e.environment.api.powerplatform.com/powerautomate/automations/direct/workflows/244ce5b70b2648dc8a28a6cc5170d121/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=vmFXCNCQkZKVOP1-yIyb4r4rtFIo2iZlxy3Q6gg__IY";
 const FLOW_B_URL = "https://6adc8542497ee52f9948699f4ec423.8e.environment.api.powerplatform.com/powerautomate/automations/direct/workflows/122e6e10f233498ea9bd8100e8f89a2c/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=QZzP2YY5yl7EOysVMcNgPaRdk4P2tKmtzNk7LV4Zx6Q";
 
-/* ===== STATE ===== */
-let records = JSON.parse(localStorage.getItem("records")||"[]");
-let companies = JSON.parse(localStorage.getItem("companies")||'["Gospel Light Christian Church"]');
+let records = JSON.parse(localStorage.getItem('records')||'[]');
+let companies = JSON.parse(localStorage.getItem('companies')||'["Gospel Light Christian Church"]');
 let foundRecord=null;
 
-/* ===== CLOCK ===== */
-function todayKey(){return new Date().toISOString().slice(0,10);}
+function todayKey(){return new Date().toISOString().slice(0,10);} 
 function updateClock(){const d=new Date();dateLine.textContent=d.toDateString();timeLine.textContent=d.toLocaleTimeString();}
 setInterval(updateClock,1000);updateClock();
 
-/* ===== UTIL ===== */
-function sanitizeHp(i){i.value=i.value.replace(/\D/g,'').slice(0,8);}
+function sanitizeHp(i){i.value=i.value.replace(/\D/g,'').slice(0,8);} 
 function show(id){document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
 function goMain(){show('main');}
 function showPopup(t,m){popupTitle.textContent=t;popupMsg.textContent=m;popup.style.display='flex';}
 function closePopup(){popup.style.display='none';}
 function showAbout(){showPopup('About VisitorPass','Internal visitor management system for Gospel Light Christian Church.');}
 
-/* ===== SIGN IN ===== */
-function openSignIn(){inName.value=inHp.value=inPurpose.value=newCompany.value="";newCompanyBox.style.display='none';loadCompanies();show('signIn');}
+function openSignIn(){inName.value=inHp.value=inPurpose.value=newCompany.value='';newCompanyBox.style.display='none';loadCompanies();show('signIn');}
 function loadCompanies(){inCompany.innerHTML='<option value="">Select Company</option>';companies.forEach(c=>{const o=document.createElement('option');o.value=o.textContent=c;inCompany.appendChild(o);});const add=document.createElement('option');add.value='__NEW__';add.textContent='+ Add new company';inCompany.appendChild(add);} 
 function companyChanged(){newCompanyBox.style.display=(inCompany.value==='__NEW__')?'block':'none';}
 
 function submitSignIn(){
   const hp=inHp.value.trim();
-  if(records.find(r=>r.hp===hp && !r.outTime)){showPopup('Already Signed In','This visitor is already signed in.');return;}
+  if(records.find(r=>r.hp===hp && !r.outTime)){
+    showPopup('Already Signed In','This visitor is already signed in.');return;
+  }
   const now=new Date();
   const record={name:inName.value.trim(),hp,company:(inCompany.value==='__NEW__'?newCompany.value.trim():inCompany.value),purpose:inPurpose.value.trim(),date:now.toLocaleDateString(),day:now.toLocaleDateString(undefined,{weekday:'long'}),timeIn:now.toLocaleTimeString(),dateKey:todayKey(),outTime:''};
   if(!record.name||!record.hp||!record.company||!record.purpose){showPopup('Error','Fill all fields.');return;}
@@ -191,7 +193,6 @@ function submitSignIn(){
   goMain();
 }
 
-/* ===== SIGN OUT ===== */
 function openSignOut(){outHp.value='';foundInfo.style.display='none';doSignOut.style.display='none';totalToday.textContent='Total today: '+records.filter(r=>r.dateKey===todayKey()).length;stillInside.textContent='Still inside: '+records.filter(r=>!r.outTime).length;show('signOut');}
 
 outHp.addEventListener('input',()=>{const hp=outHp.value;const active=records.find(r=>r.hp===hp && !r.outTime);const any=records.find(r=>r.hp===hp);if(!active && any){showPopup('Visitor has signed out!','Contact admin if incorrect.');return;}if(!active)return;foundRecord=active;foundName.textContent=active.name;foundCompany.textContent=active.company;foundInfo.style.display='block';doSignOut.style.display='block';});
