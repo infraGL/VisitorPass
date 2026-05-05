@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <!--
 VisitorPass index.html
-Version: 1.1.5 (LOGO RESTORED)
+Version: 1.1.6 (STABLE BASELINE)
 Last updated: 2026-05-02
 Change summary:
-- Restored Gospel-Logo.png branding header
-- No logic changes from v1.1.4
-- Flow A & Flow B untouched
+- ✅ Fixed logo rendering using Gospel-Logo.png
+- ✅ No logic changes from v1.1.4
+- ✅ Flow A & Flow B untouched
+- ✅ Duplicate sign-in prevention intact
+- ✅ SignOutDate & TimeOut working
 -->
 <html lang="en">
 <head>
@@ -95,8 +97,9 @@ input,select{
 <body>
 <div class="app">
 
+<!-- LOGO -->
 <div id="logo">
-  Gospel-Logo.png
+  <img src="Gospel-Logo.png" alt="Gospel Light Christian Church Logo">
 </div>
 
 <h1>VisitorPass</h1>
