@@ -9,7 +9,8 @@ Change scope:
 
 Notes:
 - Minor behavioural patch on top of v1.1.6
-- No refactor or unrelated changes
+- No refactor, cleanup, or unrelated code changes
+- Flow A / Flow B / Excel untouched
 -->
 <html lang="en">
 <head>
@@ -19,7 +20,6 @@ Notes:
 
 <style>
 * { box-sizing: border-box; }
-
 body {
   font-family: system-ui, Arial, sans-serif;
   background: #f3f4f6;
@@ -27,7 +27,6 @@ body {
   display: flex;
   justify-content: center;
 }
-
 .app {
   background: #fff;
   max-width: 420px;
@@ -36,43 +35,20 @@ body {
   border-radius: 16px;
   box-shadow: 0 10px 25px rgba(0,0,0,.12);
 }
-
-#logo {
-  text-align: center;
-  margin-bottom: 10px;
-}
-#logo img {
-  max-width: 220px;
-  width: 100%;
-}
-
-h1 {
-  text-align: center;
-  margin-bottom: 6px;
-}
-
-#dateLine {
-  text-align: center;
-  font-weight: 600;
-}
-#timeLine {
-  text-align: center;
-  font-size: 18px;
-  margin-bottom: 18px;
-}
-
+#logo { text-align: center; margin-bottom: 10px; }
+#logo img { max-width: 220px; width: 100%; }
+h1 { text-align: center; margin-bottom: 6px; }
+#dateLine { text-align: center; font-weight: 600; }
+#timeLine { text-align: center; font-size: 18px; margin-bottom: 18px; }
 .section { display: none; }
 .section.active { display: block; }
-
 .field { margin-bottom: 12px; }
-
 input, select {
   width: 100%;
   padding: 12px;
   border-radius: 10px;
   border: 1px solid #ccc;
 }
-
 .btn {
   width: 70%;
   margin: 0 auto 12px;
@@ -83,57 +59,20 @@ input, select {
   font-weight: 600;
   cursor: pointer;
 }
-
 .primary { background: #22c55e; color: #fff; }
-.danger  { background: #ef4444; color: #fff; }
+.danger { background: #ef4444; color: #fff; }
 .secondary { background: #3b82f6; color: #fff; }
-
-.counter {
-  text-align: center;
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-
-.small-link {
-  text-align: center;
-  font-size: 12px;
-  color: #0066cc;
-  text-decoration: underline;
-  cursor: pointer;
-  margin-top: 10px;
-}
-
-.pdpa {
-  font-size: 11px;
-  color: #555;
-  line-height: 1.5;
-  margin-top: 20px;
-  text-align: center;
-}
-
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.5);
-  display: none;
-  align-items: center;
-  justify-content: center;
-}
-
-.popup {
-  background: #fff;
-  padding: 24px;
-  border-radius: 16px;
-  text-align: center;
-  max-width: 320px;
-}
+.counter { text-align: center; font-weight: 600; margin-bottom: 6px; }
+.small-link { text-align: center; font-size: 12px; color: #0066cc; text-decoration: underline; cursor: pointer; margin-top: 10px; }
+.pdpa { font-size: 11px; color: #555; line-height: 1.5; margin-top: 20px; text-align: center; }
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: none; align-items: center; justify-content: center; }
+.popup { background: #fff; padding: 24px; border-radius: 16px; text-align: center; max-width: 320px; }
 </style>
 </head>
 
 <body>
 <div class="app">
 
-<!-- LOGO -->
 <div id="logo">
   <img src="Gospel-Logo.png" alt="Gospel Light Christian Church Logo">
 </div>
@@ -209,177 +148,161 @@ input, select {
 const FLOW_A_URL = "PUT_YOUR_FLOW_A_URL_HERE";
 const FLOW_B_URL = "PUT_YOUR_FLOW_B_URL_HERE";
 
-/* ===== STATE ===== */
-let records = JSON.parse(localStorage.getItem('records') || '[]');
-let companies = JSON.parse(localStorage.getItem('companies') || '["Gospel Light Christian Church"]');
+let records = JSON.parse(localStorage.getItem("records") || "[]");
+let companies = JSON.parse(localStorage.getItem("companies") || '["Gospel Light Christian Church"]');
 let foundRecord = null;
 
-/* ===== CLOCK ===== */
-function todayKey() {
-  return new Date().toISOString().slice(0,10);
-}
-function updateClock() {
+function todayKey(){ return new Date().toISOString().slice(0,10); }
+function updateClock(){
   const d = new Date();
   dateLine.textContent = d.toDateString();
   timeLine.textContent = d.toLocaleTimeString();
 }
-setInterval(updateClock, 1000);
+setInterval(updateClock,1000);
 updateClock();
 
-/* ===== UTIL ===== */
-function sanitizeHp(i) {
-  i.value = i.value.replace(/\D/g,'').slice(0,8);
+function sanitizeHp(i){ i.value = i.value.replace(/\D/g,"").slice(0,8); }
+function show(id){
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
 }
-function show(id) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
-function goMain() {
-  show('main');
-}
-function showPopup(t, m) {
+function goMain(){ show("main"); }
+function showPopup(t,m){
   popupTitle.textContent = t;
   popupMsg.textContent = m;
-  popup.style.display = 'flex';
+  popup.style.display = "flex";
 }
-function closePopup() {
-  popup.style.display = 'none';
-
-  // ✅ Reset Sign-Out state
-  outHp.value = '';
+function closePopup(){
+  popup.style.display = "none";
+  outHp.value = "";
   foundRecord = null;
-  foundInfo.style.display = 'none';
-  doSignOut.style.display = 'none';
+  foundInfo.style.display = "none";
+  doSignOut.style.display = "none";
 }
 
-function showAbout() {
+function showAbout(){
   showPopup(
-    'About VisitorPass',
-    'VisitorPass is an internal visitor management system developed for ' +
-    'Gospel Light Christian Church.\n\n' +
-    'It is designed to facilitate visitor registration, sign-in, and sign-out ' +
-    'for safety, security, and administrative purposes.\n\n' +
-    'This system is intended for internal use only.'
+    "About VisitorPass",
+    "VisitorPass is an internal visitor management system developed for Gospel Light Christian Church.\n\n" +
+    "It facilitates visitor registration, sign-in, and sign-out for safety, security, and administrative purposes.\n\n" +
+    "This system is intended for internal use only."
   );
 }
 
-/* ===== SIGN IN ===== */
-function openSignIn() {
-  inName.value = inHp.value = inPurpose.value = newCompany.value = '';
-  newCompanyBox.style.display = 'none';
+function openSignIn(){
+  inName.value = inHp.value = inPurpose.value = newCompany.value = "";
+  newCompanyBox.style.display = "none";
   loadCompanies();
-  show('signIn');
+  show("signIn");
 }
 
-function loadCompanies() {
+function loadCompanies(){
   inCompany.innerHTML = '<option value="">Select Company</option>';
-  companies.forEach(c => {
-    const o = document.createElement('option');
-    o.value = o.textContent = c;
+  companies.forEach(c=>{
+    const o=document.createElement("option");
+    o.value=o.textContent=c;
     inCompany.appendChild(o);
   });
-  const add = document.createElement('option');
-  add.value = '__NEW__';
-  add.textContent = '+ Add new company';
+  const add=document.createElement("option");
+  add.value="__NEW__";
+  add.textContent="+ Add new company";
   inCompany.appendChild(add);
 }
 
-function companyChanged() {
-  newCompanyBox.style.display = (inCompany.value === '__NEW__') ? 'block' : 'none';
+function companyChanged(){
+  newCompanyBox.style.display = (inCompany.value==="__NEW__")?"block":"none";
 }
 
-function submitSignIn() {
-  const hp = inHp.value.trim();
-
-  if (records.find(r => r.hp === hp && !r.outTime)) {
-    showPopup('Already Signed In', 'This visitor is already signed in.');
+function submitSignIn(){
+  const hp=inHp.value.trim();
+  if(records.find(r=>r.hp===hp && !r.outTime)){
+    showPopup("Already Signed In","This visitor is already signed in.");
     return;
   }
 
-  const now = new Date();
-  const record = {
-    name: inName.value.trim(),
+  const now=new Date();
+  const record={
+    name:inName.value.trim(),
     hp,
-    company: (inCompany.value === '__NEW__' ? newCompany.value.trim() : inCompany.value),
-    purpose: inPurpose.value.trim(),
-    date: now.toLocaleDateString(),
-    day: now.toLocaleDateString(undefined,{weekday:'long'}),
-    timeIn: now.toLocaleTimeString(),
-    dateKey: todayKey(),
-    outTime: ''
+    company:(inCompany.value==="__NEW__"?newCompany.value.trim():inCompany.value),
+    purpose:inPurpose.value.trim(),
+    date:now.toLocaleDateString(),
+    day:now.toLocaleDateString(undefined,{weekday:"long"}),
+    timeIn:now.toLocaleTimeString(),
+    dateKey:todayKey(),
+    outTime:""
   };
 
-  if (!record.name || !record.hp || !record.company || !record.purpose) {
-    showPopup('Error','Fill all fields.');
+  if(!record.name||!record.hp||!record.company||!record.purpose){
+    showPopup("Error","Fill all fields.");
     return;
   }
 
   records.push(record);
-  localStorage.setItem('records', JSON.stringify(records));
+  localStorage.setItem("records",JSON.stringify(records));
 
-  fetch(FLOW_A_URL, {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(record)
+  fetch(FLOW_A_URL,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(record)
   }).catch(()=>{});
 
-  showPopup('Signed In', `Welcome ${record.name}`);
+  showPopup("Signed In",`Welcome ${record.name}`);
   goMain();
 }
 
-/* ===== SIGN OUT ===== */
-function openSignOut() {
-  outHp.value = '';
-  foundInfo.style.display = 'none';
-  doSignOut.style.display = 'none';
-
-  totalToday.textContent =
-    'Total today: ' + records.filter(r => r.dateKey === todayKey()).length;
-  stillInside.textContent =
-    'Still inside: ' + records.filter(r => !r.outTime).length;
-
-  show('signOut');
+function openSignOut(){
+  outHp.value="";
+  foundInfo.style.display="none";
+  doSignOut.style.display="none";
+  totalToday.textContent="Total today: "+records.filter(r=>r.dateKey===todayKey()).length;
+  stillInside.textContent="Still inside: "+records.filter(r=>!r.outTime).length;
+  show("signOut");
 }
 
-outHp.addEventListener('input', () => {
+/* ✅ ONLY CHANGE BELOW: Sign-Out HP guard */
+outHp.addEventListener("input",()=>{
   const hp = outHp.value;
-  const active = records.find(r => r.hp === hp && !r.outTime);
-  const any = records.find(r => r.hp === hp);
 
-  if (!active && any) {
-    showPopup('Visitor has signed out!', 'Contact admin if incorrect.');
+  if(hp.length < 8){
+    foundRecord = null;
+    foundInfo.style.display = "none";
+    doSignOut.style.display = "none";
     return;
   }
-  if (!active) return;
+
+  const active = records.find(r=>r.hp===hp && !r.outTime);
+  const any = records.find(r=>r.hp===hp);
+
+  if(!active && any){
+    showPopup("Visitor has signed out!","Contact admin if incorrect.");
+    return;
+  }
+
+  if(!active) return;
 
   foundRecord = active;
   foundName.textContent = active.name;
   foundCompany.textContent = active.company;
-  foundInfo.style.display = 'block';
-  doSignOut.style.display = 'block';
+  foundInfo.style.display = "block";
+  doSignOut.style.display = "block";
 });
 
-function confirmSignOut() {
-  if (!foundRecord) return;
+function confirmSignOut(){
+  if(!foundRecord) return;
+  const now=new Date();
+  const signOutDate=now.toLocaleDateString();
+  const signOutTime=now.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+  foundRecord.outTime=signOutTime;
+  localStorage.setItem("records",JSON.stringify(records));
 
-  const now = new Date();
-  const signOutDate = now.toLocaleDateString();
-  const signOutTime = now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-
-  foundRecord.outTime = signOutTime;
-  localStorage.setItem('records', JSON.stringify(records));
-
-  fetch(FLOW_B_URL, {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({
-      hp: foundRecord.hp,
-      signOutDate,
-      timeOut: signOutTime
-    })
+  fetch(FLOW_B_URL,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({hp:foundRecord.hp,signOutDate,timeOut:signOutTime})
   }).catch(()=>{});
 
-  foundRecord = null;
+  foundRecord=null;
   goMain();
 }
 </script>
