@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <!--
 VisitorPass index.html
-Version: 1.1.6b (Company dropdown reset)
-Built: 2026-05-05 09:20 SGT
+Version: 1.1.6c (Logo fix + Company list via Flow C)
+Built: 2026-05-05 10:10 SGT
 
 Change scope:
-- Company dropdown is always cleared when Sign-In page opens
-- No cached / test companies are shown
-- Prepared for Flow C (CompanyList read/write)
+- ✅ Restored logo rendering using <img>
+- ✅ Company dropdown auto-populated from Flow C (CompanyList)
+- ✅ Dropdown cleared and rebuilt on every Sign-In open
 
 Notes:
-- Built on top of full v1.1.6a baseline
-- No related code removed
-- Flow A / Flow B / Excel untouched
+- Built strictly on top of v1.1.6b baseline
+- No related logic removed
+- Flow A / Flow B untouched
+- Flow C used for LIST only (read)
 -->
 <html lang="en">
 <head>
@@ -177,8 +178,10 @@ const FLOW_A_URL = "https://6adc8542497ee52f9948699f4ec423.8e.environment.api.po
 
 const FLOW_B_URL = "https://6adc8542497ee52f9948699f4ec423.8e.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/122e6e10f233498ea9bd8100e8f89a2c/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=QZzP2YY5yl7EOysVMcNgPaRdk4P2tKmtzNk7LV4Zx6Q";
 
+// ✅ Flow C (Company List)
+const FLOW_C_URL = "https://6adc8542497ee52f9948699f4ec423.8e.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/4fecea6e48c44688beb736a94fabbdaa/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=BnEzWN-Xd_TrPPmFt83GYa7VUcg_BhQAjgSgtL7AdXo";
+
 let records = JSON.parse(localStorage.getItem("records") || "[]");
-let companies = JSON.parse(localStorage.getItem("companies") || '[]');
 let foundRecord = null;
 
 function todayKey(){ return new Date().toISOString().slice(0,10); }
@@ -208,29 +211,44 @@ function showAbout(){
   );
 }
 
-/* ===== COMPANY DROPDOWN RESET (LOCKED) ===== */
+/* ===== COMPANY DROPDOWN (Flow C LIST) ===== */
 function resetCompanyDropdown(){
   inCompany.innerHTML = '<option value="">Select Company</option>';
+}
+
+async function loadCompaniesFromFlowC(){
+  try {
+    const res = await fetch(FLOW_C_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode: "list" })
+    });
+
+    const data = await res.json();
+    if (!data || !Array.isArray(data.companies)) return;
+
+    data.companies.forEach(c => {
+      const o = document.createElement("option");
+      o.value = o.textContent = c;
+      inCompany.appendChild(o);
+    });
+
+    const add = document.createElement("option");
+    add.value = "__NEW__";
+    add.textContent = "+ Add new company";
+    inCompany.appendChild(add);
+
+  } catch (e) {
+    console.error("Flow C load failed", e);
+  }
 }
 
 function openSignIn(){
   inName.value = inHp.value = inPurpose.value = newCompany.value = "";
   newCompanyBox.style.display = "none";
   resetCompanyDropdown();
+  loadCompaniesFromFlowC(); // ✅ auto-fill from Excel
   show("signIn");
-}
-
-function loadCompanies(){
-  resetCompanyDropdown();
-  companies.forEach(c=>{
-    const o=document.createElement("option");
-    o.value=o.textContent=c;
-    inCompany.appendChild(o);
-  });
-  const add=document.createElement("option");
-  add.value="__NEW__";
-  add.textContent="+ Add new company";
-  inCompany.appendChild(add);
 }
 
 function companyChanged(){ newCompanyBox.style.display = (inCompany.value==="__NEW__")?"block":"none"; }
@@ -263,7 +281,6 @@ function submitSignIn(){
   fetch(FLOW_A_URL,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(record) }).catch(()=>{});
 
   showPopup("Signed In",`Welcome ${record.name}`);
-  resetCompanyDropdown();
   goMain();
 }
 
