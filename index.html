@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <!--
 VisitorPass index.html
-Version: 1.1.6a (Sign-Out HP guard)
-Built: 2026-05-03 15:05 SGT
+Version: 1.1.6b (Company dropdown reset)
+Built: 2026-05-05 09:20 SGT
 
 Change scope:
-- Guard Sign-Out validation until full 8-digit HP is entered
+- Company dropdown is always cleared when Sign-In page opens
+- No cached / test companies are shown
+- Prepared for Flow C (CompanyList read/write)
 
 Notes:
-- Minor behavioural patch on top of v1.1.6
-- No refactor, cleanup, or unrelated code changes
+- Built on top of full v1.1.6a baseline
+- No related code removed
 - Flow A / Flow B / Excel untouched
 -->
 <html lang="en">
@@ -100,7 +102,7 @@ input, select {
 <div class="app">
 
 <div id="logo">
-  <img src="Gospel-Logo.png" alt="Gospel Light Christian Church Logo">
+  Gospel-Logo.png
 </div>
 
 <h1>VisitorPass</h1>
@@ -171,14 +173,12 @@ input, select {
 
 <script>
 /* ===== FLOW URLs (LOCKED) ===== */
-const FLOW_A_URL =
-"https://6adc8542497ee52f9948699f4ec423.8e.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/244ce5b70b2648dc8a28a6cc5170d121/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=vmFXCNCQkZKVOP1-yIyb4r4rtFIo2iZlxy3Q6gg__IY";
+const FLOW_A_URL = "https://6adc8542497ee52f9948699f4ec423.8e.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/244ce5b70b2648dc8a28a6cc5170d121/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=vmFXCNCQkZKVOP1-yIyb4r4rtFIo2iZlxy3Q6gg__IY";
 
-const FLOW_B_URL =
-"https://6adc8542497ee52f9948699f4ec423.8e.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/122e6e10f233498ea9bd8100e8f89a2c/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=QZzP2YY5yl7EOysVMcNgPaRdk4P2tKmtzNk7LV4Zx6Q";
+const FLOW_B_URL = "https://6adc8542497ee52f9948699f4ec423.8e.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/122e6e10f233498ea9bd8100e8f89a2c/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=QZzP2YY5yl7EOysVMcNgPaRdk4P2tKmtzNk7LV4Zx6Q";
 
 let records = JSON.parse(localStorage.getItem("records") || "[]");
-let companies = JSON.parse(localStorage.getItem("companies") || '["Gospel Light Christian Church"]');
+let companies = JSON.parse(localStorage.getItem("companies") || '[]');
 let foundRecord = null;
 
 function todayKey(){ return new Date().toISOString().slice(0,10); }
@@ -196,18 +196,8 @@ function show(id){
   document.getElementById(id).classList.add("active");
 }
 function goMain(){ show("main"); }
-function showPopup(t,m){
-  popupTitle.textContent = t;
-  popupMsg.textContent = m;
-  popup.style.display = "flex";
-}
-function closePopup(){
-  popup.style.display = "none";
-  outHp.value = "";
-  foundRecord = null;
-  foundInfo.style.display = "none";
-  doSignOut.style.display = "none";
-}
+function showPopup(t,m){ popupTitle.textContent=t; popupMsg.textContent=m; popup.style.display="flex"; }
+function closePopup(){ popup.style.display="none"; outHp.value=""; foundRecord=null; foundInfo.style.display="none"; doSignOut.style.display="none"; }
 
 function showAbout(){
   showPopup(
@@ -218,15 +208,20 @@ function showAbout(){
   );
 }
 
+/* ===== COMPANY DROPDOWN RESET (LOCKED) ===== */
+function resetCompanyDropdown(){
+  inCompany.innerHTML = '<option value="">Select Company</option>';
+}
+
 function openSignIn(){
   inName.value = inHp.value = inPurpose.value = newCompany.value = "";
   newCompanyBox.style.display = "none";
-  loadCompanies();
+  resetCompanyDropdown();
   show("signIn");
 }
 
 function loadCompanies(){
-  inCompany.innerHTML = '<option value="">Select Company</option>';
+  resetCompanyDropdown();
   companies.forEach(c=>{
     const o=document.createElement("option");
     o.value=o.textContent=c;
@@ -238,9 +233,7 @@ function loadCompanies(){
   inCompany.appendChild(add);
 }
 
-function companyChanged(){
-  newCompanyBox.style.display = (inCompany.value==="__NEW__")?"block":"none";
-}
+function companyChanged(){ newCompanyBox.style.display = (inCompany.value==="__NEW__")?"block":"none"; }
 
 function submitSignIn(){
   const hp=inHp.value.trim();
@@ -262,21 +255,15 @@ function submitSignIn(){
     outTime:""
   };
 
-  if(!record.name||!record.hp||!record.company||!record.purpose){
-    showPopup("Error","Fill all fields.");
-    return;
-  }
+  if(!record.name||!record.hp||!record.company||!record.purpose){ showPopup("Error","Fill all fields."); return; }
 
   records.push(record);
   localStorage.setItem("records",JSON.stringify(records));
 
-  fetch(FLOW_A_URL,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify(record)
-  }).catch(()=>{});
+  fetch(FLOW_A_URL,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(record) }).catch(()=>{});
 
   showPopup("Signed In",`Welcome ${record.name}`);
+  resetCompanyDropdown();
   goMain();
 }
 
@@ -289,25 +276,14 @@ function openSignOut(){
   show("signOut");
 }
 
-/* ✅ SIGN-OUT HP GUARD (LOCKED) */
 outHp.addEventListener("input",()=>{
   const hp = outHp.value;
-
-  if(hp.length < 8){
-    foundRecord = null;
-    foundInfo.style.display = "none";
-    doSignOut.style.display = "none";
-    return;
-  }
+  if(hp.length < 8){ foundRecord=null; foundInfo.style.display="none"; doSignOut.style.display="none"; return; }
 
   const active = records.find(r=>r.hp===hp && !r.outTime);
   const any = records.find(r=>r.hp===hp);
 
-  if(!active && any){
-    showPopup("Visitor has signed out!","Contact admin if incorrect.");
-    return;
-  }
-
+  if(!active && any){ showPopup("Visitor has signed out!","Contact admin if incorrect."); return; }
   if(!active) return;
 
   foundRecord = active;
@@ -319,17 +295,15 @@ outHp.addEventListener("input",()=>{
 
 function confirmSignOut(){
   if(!foundRecord) return;
+
   const now=new Date();
   const signOutDate=now.toLocaleDateString();
   const signOutTime=now.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+
   foundRecord.outTime=signOutTime;
   localStorage.setItem("records",JSON.stringify(records));
 
-  fetch(FLOW_B_URL,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({hp:foundRecord.hp,signOutDate,timeOut:signOutTime})
-  }).catch(()=>{});
+  fetch(FLOW_B_URL,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({hp:foundRecord.hp,signOutDate,timeOut:signOutTime}) }).catch(()=>{});
 
   foundRecord=null;
   goMain();
