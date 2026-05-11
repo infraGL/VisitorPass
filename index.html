@@ -226,13 +226,13 @@ async function loadCompaniesFromFlowC(){
     });
 
     const data = await res.json();
-    if (!data || !Array.isArray(data.companies)) return;
-
-    data.companies.forEach(c => {
-      const o = document.createElement("option");
-      o.value = o.textContent = c;
-      inCompany.appendChild(o);
-    });
+    if (data && Array.isArray(data.companies)) {
+  data.companies.forEach(c => {
+    const o = document.createElement("option");
+    o.value = o.textContent = c;
+    inCompany.appendChild(o);
+  });
+}
 
     const add = document.createElement("option");
     add.value = "__NEW__";
