@@ -254,12 +254,36 @@ function openSignIn(){
 
 function companyChanged(){ newCompanyBox.style.display = (inCompany.value==="__NEW__")?"block":"none"; }
 
-function submitSignIn(){
+async function addCompanyIfNeeded() {
+  if (inCompany.value !== "__NEW__") return;
+
+  const name = newCompany.value.trim();
+  if (!name) return;
+
+  try {
+    await fetch(FLOW_C_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        mode: "add",
+        company: name
+      })
+    });
+  } catch (e) {
+    console.error("Add company failed", e);
+  }
+}  
+  
+async function submitSignIn(){
+
+  await addCompanyIfNeeded();   // ✅ NEW LINE
+
   const hp=inHp.value.trim();
   if(records.find(r=>r.hp===hp && !r.outTime)){
     showPopup("Already Signed In","This visitor is already signed in.");
     return;
   }
+``
 
   const now=new Date();
   const record={
