@@ -278,11 +278,12 @@ async function submitSignIn(){
 
   await addCompanyIfNeeded();   // ✅ NEW LINE
 
-  const hp=inHp.value.trim();
-  if(records.find(r=>r.hp===hp && !r.outTime)){
-    showPopup("Already Signed In","This visitor is already signed in.");
-    return;
-  }
+const hp=inHp.value.trim();
+
+if (hp.length !== 8) {
+  showPopup("Error", "Handphone must be exactly 8 digits.");
+  return;
+}
 ``
 
   const now=new Date();
